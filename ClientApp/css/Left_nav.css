@@ -1,0 +1,73 @@
+.left_nav_content {
+    margin-top: 0;
+}
+
+.mps_left_nav {
+    width: 0px;
+    height: 100vh;
+    background-color: #FFF;
+    box-shadow: 5px 2px 6px rgba(0, 0, 0, .3);
+    position: fixed;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    transition: 0.5s;
+}
+
+.header_close_btn {
+    color: #FFF;
+    font-size: 30px;
+    position: absolute;
+    right: 30px;
+    top: 30px;
+    cursor: pointer;
+}
+
+.email_add {
+    font-size: 20px;
+    color: #FFF;
+    position: absolute;
+    left: 14px;
+    top: 24px;
+}
+
+.left_nav_function {
+    font-size: 20px;
+    text-align: left;
+    color: #4a4a4a;
+    margin-bottom: 80px;
+    background-color: #FFF;
+}
+
+.left_nav_function a {
+    color: #4a4a4a;
+    display: block;
+    padding-left: 60px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.left_nav_function li {
+    transition: .1s;
+    background-color: #FFF;
+}
+
+.left_nav_function li:hover,
+.btn_logout:hover {
+    background-color: #ccc;
+    cursor: pointer;
+}
+
+.btn_logout {
+    font-size: 24px;
+    display: block;
+    background-color: #FFF;
+    border: none;
+    display: block;
+    width: 100%;
+}
+
+.btn_logout a {
+    padding: 8px 20px 8px 0px;
+}

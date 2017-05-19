@@ -1,0 +1,106 @@
+.selectManage {
+    width: 35%;
+    margin: auto;
+}
+
+@media screen and (max-width:999px) {
+    .selectManage {
+        width: 50%;
+    }
+}
+
+@media screen and (max-width:699px) {
+    .selectManage {
+        width: 70%;
+    }
+}
+
+.btn_date_group {
+    width: 30%;
+    margin: 20px 1.66% 20px 1.66%;
+    color: #fff;
+}
+
+.btn_info {
+    background: #95dce4;
+    border-color: #4acdf5;
+}
+
+.btn_info:active {
+    background: #7ecfd9;
+    border-color: #30c3f0;
+}
+
+.btn_default {
+    background: #3464ec;
+    border-color: #0a48f7;
+}
+
+.btn_default:active {
+    background: #1543c4;
+    border-color: #0a34aa;
+}
+
+.btn_danger {
+    background: #e74950;
+    border-color: #f80f25;
+}
+
+.btn_danger:active {
+    background: #f30a14;
+    border-color: #d50303;
+}
+
+.rc-dialog-header {
+    background-color: #f30a14;
+    color: #fff;
+}
+
+.rc-dialog-close {
+    color: #fff;
+    opacity: 1;
+}
+
+.errmsg {
+    font-weight: 700;
+    color: red;
+}
+
+.btn_delete {
+    background: #e9252e;
+    border-color: #e6061b;
+    color: #fff;
+    width: 33%;
+    margin-left: 66%;
+}
+
+div.form_div {
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+input.form_input {
+    width: 100%;
+    text-align: center;
+    padding: 4px 10px;
+}
+
+.btn-2-group {
+    width: 42%;
+    margin: 4%;
+}
+
+.btn_trans_blue {
+    background: #fff;
+    border-color: #4acdf5;
+}
+
+.btn_trans_blue:active {
+    background: #eee;
+    border-color: #55c6e8;
+}
+
+.dialog_row {
+    text-align: left;
+    margin-bottom: 15px;
+}

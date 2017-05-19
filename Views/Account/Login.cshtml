@@ -1,0 +1,40 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using ReactSpa.Data
+@inject SignInManager<UserInfo> SignInManager
+@{
+    Layout = null;
+    var loginProviders = SignInManager.GetExternalAuthenticationSchemes().ToList();
+}
+<html>
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入</title>
+    <link rel="stylesheet" href="~/dist/vendor.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/dist/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/dist/login.css" asp-append-version="true" />
+</head>
+<body>
+<div class="header">
+    <div class="header_title">登入</div>
+</div>
+<div class="mps_content">
+    <div class="mps_row">
+        <div class="mps_row">
+            <form asp-controller="Account" asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-horizontal">
+                <div>
+                    <p>
+                        @foreach (var provider in loginProviders)
+                        {
+                            <button type="submit" class="loginBtn loginBtn--google" name="provider" value="@provider.AuthenticationScheme" title="Log in using your @provider.DisplayName account">Google登入</button>
+                        }
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="mps_row">
+        <button class="loginBtn btn_blue switch" onclick="javascript:window.open('https://www.google.com/accounts/Logout', '_blank');">切換帳號</button>
+    </div>
+</div>
+</body>
+</html>

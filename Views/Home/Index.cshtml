@@ -1,0 +1,13 @@
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div id="react-app" asp-prerender-module="ClientApp/dist/main-server" style="margin-bottom: 5%;"
+     asp-prerender-data="new {userName = @User.FindFirstValue(ClaimTypes.Name), userEmail = @User.FindFirstValue(ClaimTypes.Email)}">
+    ¸ü¤J¤¤...
+</div>
+
+@section scripts {
+    <script src="~/dist/main-client.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,24 @@
+.table_details {
+    text-align: left;
+    font-size: 20px;
+    margin: auto;
+    color: #4a4a4a;
+    overflow-x: auto;
+}
+
+.table_details tr {
+    line-height: 42px;
+}
+
+.table_details td {
+    font-weight: 100;
+}
+
+td:nth-child(1) {
+    padding-right: 3%;
+}
+
+tbody tr td:nth-child(2) {
+    overflow-x: auto;
+    max-width: 230px;
+}

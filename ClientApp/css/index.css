@@ -1,0 +1,62 @@
+﻿.manger_function {
+    font-size: 20px;
+    text-align: left;
+    font-family: STHeitiTC-Medium;
+    color: #4a4a4a;
+    margin-bottom: 80px;
+}
+
+.checkin_date {
+    font-size: 20px;
+}
+
+.checkin_time {
+    font-size: 40px;
+    margin-bottom: 0px;
+}
+
+.record_time {
+    font-size: 24px;
+    margin-bottom: 0px;
+}
+
+.btn_logout {
+    font-size: 24px;
+    display: block;
+    margin-left: 60px;
+    background-color: #FFF;
+    border: none;
+}
+
+@media screen and (min-width:700px) {
+    .map_wrapper {
+        float: left;
+        position: absolute;
+        top: 220px;
+        left: 8%;
+        width: 40%;
+        height: 350px;
+    }
+    .content_wrapper {
+        margin-left: 40%;
+    }
+}
+
+@media screen and (max-width:699px) {
+    .map_wrapper {
+        width: 80%;
+        margin: 0 auto;
+        height: 240px;
+        margin-bottom: 4%;
+    }
+    .content_wrapper {
+        margin-left: 0;
+    }
+    .record_time {
+        font-size: 18px;
+    }
+    .checkin_time {
+        font-size: 36px;
+        margin-bottom: 0px;
+    }
+}
