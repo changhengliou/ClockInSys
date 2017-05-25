@@ -1,30 +1,39 @@
 import { fetch, addTask } from 'domain-task';
 import moment from 'moment';
 
-const initState = {}
+const initState = {
+    all: false,
+    name: null,
+    options: '0',
+    dateOptions: null,
+    nameList: [],
+}
 
 export const actionCreators = {
-    getInitState: (year, month) => (dispatch, getState) => {
-        dispatch({ type: 'REQUEST_RECORD_INIT_STATE', payload: { isLoading: true } });
-        let fetchTask = fetch(`api/record/getInitState?y=${year}&m=${month}`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json, text/javascript, */*; q=0.01',
-                'Content-Type': 'application/json; charset=UTF-8',
-            }
-        }).then(response => response.json()).then(data => {
-            dispatch({ type: 'REQUEST_RECORD_INIT_STATE_FINISHED', payload: { isLoading: false, events: data.payload } });
-        }).catch(error => {
-            dispatch({ type: 'REQUEST_RECORD_INIT_STATE_FAILED' });
-        });
-        addTask(fetchTask);
+    onNameChanged: (value) => (dispatch, getState) => {
+        dispatch({ type: 'ON_NAME_CHANGE', payload: { name: value } });
+    },
+    onOptionsChanges: (value) => (dispatch, getState) => {
+        dispatch({ type: 'ON_OPT_CHANGE', payload: { options: value } });
+    },
+    onAllChanged: () => (dispatch, getState) => {
+        var opt = !getState().report.all;
+        dispatch({ type: 'ON_ALL_CHANGE', payload: { all: opt } })
+    },
+    onDateOptionsChanges: (value) => (dispatch, getState) => {
+        dispatch({ type: 'ON_DATE_OPT_CHANGE', payload: { dateOptions: value } })
     },
 }
 
 export const reducer = (state = initState, action) => {
     var _data = Object.assign({}, state, action.payload);
     switch (action.type) {
-        default: return initState;
+        case 'ON_NAME_CHANGE':
+        case 'ON_ALL_CHANGE':
+        case 'ON_OPT_CHANGE':
+        case 'ON_DATE_OPT_CHANGE':
+            return _data;
+        default:
+            return initState;
     }
 }

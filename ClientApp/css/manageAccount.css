@@ -3,15 +3,26 @@
     margin: auto;
 }
 
+.selectReport {
+    width: 50%;
+    margin: auto;
+}
+
 @media screen and (max-width:999px) {
     .selectManage {
         width: 50%;
+    }
+    .selectReport {
+        width: 70%;
     }
 }
 
 @media screen and (max-width:699px) {
     .selectManage {
         width: 70%;
+    }
+    .selectReport {
+        width: 90%;
     }
 }
 
