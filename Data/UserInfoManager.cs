@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -224,6 +226,23 @@ namespace ReactSpa.Data
     {
         public string Value { get; set; } //Id
         public string Label { get; set; } //Name
+
+        public override bool Equals(object obj)
+        {
+            NameListModel z = obj as NameListModel;
+            return z != null && z.Value == Value && z.Label == Label;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = (int)2166136261;
+                hash = (hash * 16777619) ^ Value.GetHashCode();
+                hash = (hash * 16777619) ^ Label.GetHashCode();
+                return hash;
+            }
+        }
     }
 
     public class UserInfoModel

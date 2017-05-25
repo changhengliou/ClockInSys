@@ -84,6 +84,10 @@ namespace ReactSpa.Controllers
             if (result.Succeeded)
             {
                 _logger.LogInformation(5, "User logged in with {Name} provider.", info.LoginProvider);
+                Debug.WriteLine($"auth = {User.Identity.IsAuthenticated}");
+                Debug.WriteLine($"id = {User.FindFirstValue(ClaimTypes.NameIdentifier)}");
+                Debug.WriteLine($"email = {User.FindFirstValue(ClaimTypes.Email)}");
+                Debug.WriteLine($"name = {User.FindFirstValue(ClaimTypes.Name)}");
                 return RedirectToAction("Index", "Home");
             }
 

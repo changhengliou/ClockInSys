@@ -15,7 +15,6 @@ namespace ReactSpa.Data
     {
         public DbSet<UserInfo> UserInfo { get; set; }
         public DbSet<CheckRecord> CheckRecord { get; set; }
-        public DbSet<LeavesReview> LeavesReview { get; set; }
         public DbSet<UserDeputy> UserDeputy { get; set; }
         public DbSet<UserSupervisor> UserSupervisor { get; set; }
 
@@ -39,7 +38,7 @@ namespace ReactSpa.Data
                 .Ignore(c => c.NormalizedUserName);
 
             builder.Entity<UserInfo>().Property(s => s.UserName);
-            builder.Entity<UserInfo>().HasAlternateKey(s => s.Email);
+            builder.Entity<UserInfo>().HasIndex(s => s.Email).IsUnique();
             builder.Entity<UserInfo>().Property(s => s.AnnualLeaves).HasColumnType("decimal(5, 2)").HasDefaultValue("0");
             builder.Entity<UserInfo>()
                 .Property(s => s.FamilyCareLeaves)
@@ -74,11 +73,7 @@ namespace ReactSpa.Data
             builder.Entity<CheckRecord>().Property(s => s.GeoLocation2).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.Comment).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.OffEndDate).IsRequired(false);
-            builder.Entity<CheckRecord>()
-                .HasMany(s => s.LeavesReview)
-                .WithOne(s => s.Record)
-                .HasForeignKey(s => s.RecordId)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<CheckRecord>().Property(s => s.StatusOfApproval).IsRequired(false);
 
             builder.Entity<UserInfo>().ToTable("User");
             builder.Entity<IdentityUserToken<String>>().ToTable("UserToken");
@@ -131,30 +126,6 @@ namespace ReactSpa.Data
         public virtual ICollection<UserSupervisor> Supervisor { get; set; }
     }
 
-
-    [Table(("LeavesReview"))]
-    public class LeavesReview
-    {
-        private string _Id;
-
-        [Key]
-        public string Id
-        {
-            get
-            {
-                if (String.IsNullOrWhiteSpace(_Id))
-                    return Guid.NewGuid().ToString();
-                return _Id;
-            }
-            set { _Id = value; }
-        }
-
-        public string RecordId { get; set; }
-
-        public string ReviewerId { get; set; }
-
-        public virtual CheckRecord Record { get; set; }
-    }
 
     [Table("CheckRecord")]
     public class CheckRecord
@@ -210,15 +181,18 @@ namespace ReactSpa.Data
 
         public string StatusOfApproval
         {
-            get { return StatusOfApprovalEnum.PENDING(); }
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_StatusOfApproval))
+                    return StatusOfApprovalEnum.PENDING();
+                return _StatusOfApproval;
+            }
             set { _StatusOfApproval = value; }
         }
 
         public string Comment { get; set; }
 
         public virtual UserInfo UserInfo { get; set; }
-
-        public virtual ICollection<LeavesReview> LeavesReview { get; set; }
     }
 
     [Table("UserDeputy")]

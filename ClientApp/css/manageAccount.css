@@ -32,6 +32,7 @@
 }
 
 .btn_default {
+    color: #fff;
     background: #3464ec;
     border-color: #0a48f7;
 }
@@ -42,6 +43,7 @@
 }
 
 .btn_danger {
+    color: #fff;
     background: #e74950;
     border-color: #f80f25;
 }

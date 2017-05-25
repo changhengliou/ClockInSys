@@ -8,9 +8,10 @@ using ReactSpa.Data;
 namespace ReactSpa.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170523063333_fix1")]
+    partial class fix1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.1")
@@ -165,6 +166,22 @@ namespace ReactSpa.Migrations
                     b.ToTable("CheckRecord");
                 });
 
+            modelBuilder.Entity("ReactSpa.Data.LeavesReview", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("RecordId");
+
+                    b.Property<string>("ReviewerId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordId");
+
+                    b.ToTable("LeavesReview");
+                });
+
             modelBuilder.Entity("ReactSpa.Data.UserDeputy", b =>
                 {
                     b.Property<string>("Id")
@@ -289,6 +306,14 @@ namespace ReactSpa.Migrations
                     b.HasOne("ReactSpa.Data.UserInfo", "UserInfo")
                         .WithMany("CheckRecords")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ReactSpa.Data.LeavesReview", b =>
+                {
+                    b.HasOne("ReactSpa.Data.CheckRecord", "Record")
+                        .WithMany("LeavesReview")
+                        .HasForeignKey("RecordId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

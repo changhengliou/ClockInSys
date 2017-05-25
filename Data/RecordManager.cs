@@ -18,7 +18,7 @@ namespace ReactSpa.Data
 
         public RecordManager(IOptions<ConnectionInfo> configuration)
         {
-            ConnectionInfo config = configuration.Value;
+            var config = configuration.Value;
             builder.UseSqlServer(config.LocalSQLServer);
         }
 
@@ -71,7 +71,8 @@ namespace ReactSpa.Data
             using (var dbContext = new AppDbContext(builder.Options))
             {
                 var now = DateTime.Today;
-                var record = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.UserId == id && s.CheckedDate == now);
+                var record =
+                    await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.UserId == id && s.CheckedDate == now);
                 if (record == null)
                     return null;
                 record.CheckOutTime = DateTime.Now.TimeOfDay;
@@ -109,12 +110,13 @@ namespace ReactSpa.Data
         }
 
         /** bug notify supervisor, deputy, role */
+
         public async Task<bool> AddLeaveAsync(string id, OffRecordModel model)
         {
             using (var dbContext = new AppDbContext(builder.Options))
             {
                 dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
-                
+                var recordList = new List<CheckRecord>();
                 var records = dbContext.CheckRecord.Where(
                     s => s.UserId == id &&
                          s.CheckedDate >= model.CheckedDate &&
@@ -126,7 +128,7 @@ namespace ReactSpa.Data
                     var record = records.FirstOrDefault(s => s.CheckedDate.Date == i.Date);
                     if (record == null)
                     {
-                        await dbContext.CheckRecord.AddAsync(new CheckRecord
+                        recordList.Add(new CheckRecord
                         {
                             UserId = id,
                             CheckedDate = i,
@@ -148,6 +150,7 @@ namespace ReactSpa.Data
                         dbContext.Entry(record).State = EntityState.Modified;
                     }
                 }
+                await dbContext.CheckRecord.AddRangeAsync(recordList);
 
                 await dbContext.SaveChangesAsync();
                 return true;
@@ -158,11 +161,14 @@ namespace ReactSpa.Data
         {
             using (var dbContext = new AppDbContext(builder.Options))
             {
-                var result = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.UserId == id && s.CheckedDate == date);
+                var result =
+                    await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.UserId == id && s.CheckedDate == date);
                 if (result == null)
                     return false;
                 if (result.CheckInTime == null)
+                {
                     dbContext.Entry(result).State = EntityState.Deleted;
+                }
                 else
                 {
                     result.OffTimeStart = null;
@@ -178,11 +184,131 @@ namespace ReactSpa.Data
             }
         }
 
-        public async Task<bool> GetNotification(string id)
+        public async Task<List<NameListModel>> GetDeputiesAsync(string id)
         {
             using (var dbContext = new AppDbContext(builder.Options))
             {
-                return false;
+                var deputies = await (from user in dbContext.UserInfo
+                    join deputy in dbContext.UserDeputy on user.Id equals deputy.UserId
+                    where user.Id == id
+                    select new NameListModel {Label = user.UserName, Value = user.Id}).ToListAsync();
+                return deputies;
+            }
+        }
+
+        public async Task<List<NameListModel>> GetSupervisorsAsync(string id)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                var supervisors = await (from user in dbContext.UserInfo
+                    join supervisor in dbContext.UserSupervisor on user.Id equals supervisor.UserId
+                    where user.Id == id
+                    select new NameListModel {Label = user.UserName, Value = user.Id}).ToListAsync();
+                return supervisors;
+            }
+        }
+
+        /**
+         * @params showAll, show all other people's checkRecord
+         * @params showDeputy, only show if user is other people's deputy
+         * @params showSupervisor, only show if user is other people's supervisor
+         * @params range, only shows records after today - spacific days
+         */
+
+        public async Task<List<NotificationModel>> GetNotificationAsync(string id, bool showAll = false,
+            bool showDeputy = false, bool showSupervisor = false, int range = -7)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                DateTime dateBound = DateTime.Today.AddDays(range);
+                if (showAll)
+                {
+                    return await (from record in dbContext.CheckRecord
+                        join user in dbContext.UserInfo on record.UserId equals user.Id
+                        where record.CheckedDate > dateBound &&
+                              !string.IsNullOrWhiteSpace(record.OffType)
+                        select new NotificationModel
+                        {
+                            Id = record.Id,
+                            UserName = user.UserName,
+                            CheckedDate = record.CheckedDate.ToString("yyyy-MM-dd"),
+                            OffType = record.OffType,
+                            OffTime = $"{record.OffTimeStart} - {record.OffTimeEnd}",
+                            OffReason = record.OffReason,
+                            StatusOfApproval = record.StatusOfApproval
+                        }).ToListAsync();
+                }
+                List<NameListModel> userDeputy = new List<NameListModel>(), userSupervisor = new List<NameListModel>();
+                if (showDeputy)
+                {
+                    userDeputy = await (from deputy in dbContext.UserDeputy
+                        join user in dbContext.UserInfo on deputy.UserId equals user.Id
+                        where deputy.DeputyId == id
+                        select new NameListModel {Label = user.UserName, Value = user.Id}).ToListAsync();
+                }
+                if (showSupervisor)
+                {
+                    userSupervisor = await (from supervisor in dbContext.UserSupervisor
+                        join user in dbContext.UserInfo on supervisor.UserId equals user.Id
+                        where supervisor.SupervisorId == id
+                        select new NameListModel {Label = user.UserName, Value = user.Id}).ToListAsync();
+                }
+                var ulist = userDeputy.Union(userSupervisor).ToList();
+                var result = await dbContext.CheckRecord
+                    .Where(s => ulist.Any(w => w.Value == s.UserId) &&
+                                s.CheckedDate > dateBound &&
+                                !string.IsNullOrWhiteSpace(s.OffType))
+                    .Select(s => new NotificationModel
+                    {
+                        Id = s.Id,
+                        UserName = ulist.FirstOrDefault(z => z.Value == s.UserId).Label,
+                        CheckedDate = s.CheckedDate.ToString("yyyy-MM-dd"),
+                        OffType = s.OffType,
+                        OffTime = $"{s.OffTimeStart.ToString()} - {s.OffTimeEnd.ToString()}",
+                        OffReason = s.OffReason,
+                        StatusOfApproval = s.StatusOfApproval
+                    })
+                    .ToListAsync();
+                return result;
+            }
+        }
+
+        public async Task<List<NotificationModel>> GetNotificationByIdAsync(string id, int range = -7)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                var dateBound = DateTime.Today.AddDays(range);
+                var result = await dbContext.CheckRecord
+                    .Where(s => !string.IsNullOrWhiteSpace(s.OffType) && s.CheckedDate > dateBound)
+                    .Select(s => new NotificationModel
+                    {
+                        CheckedDate = s.CheckedDate.ToString("yyyy-MM-dd"),
+                        OffType = s.OffType,
+                        OffTime = $"{s.OffTimeStart} - {s.OffTimeEnd}",
+                        OffReason = s.OffReason,
+                        StatusOfApproval = s.StatusOfApproval
+                    }).ToListAsync();
+                return result;
+            }
+        }
+
+        public async Task<bool> SetStatusOfApprovalAsync(string recordId, string status)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                try
+                {
+                    var record = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.Id == recordId);
+                    if (record == null)
+                        return false;
+                    record.StatusOfApproval = status;
+                    await dbContext.SaveChangesAsync();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
             }
         }
     }
@@ -224,6 +350,23 @@ namespace ReactSpa.Data
             set { OffTimeEnd = new TimeSpan(value, 0, 0); }
         }
 
+
+        public string OffReason { get; set; }
+
+        public string StatusOfApproval { get; set; }
+    }
+
+    public class NotificationModel
+    {
+        public string Id { get; set; }
+
+        public string UserName { get; set; }
+
+        public string CheckedDate { get; set; }
+
+        public string OffType { get; set; }
+
+        public string OffTime { get; set; }
 
         public string OffReason { get; set; }
 

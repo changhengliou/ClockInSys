@@ -86,10 +86,54 @@ namespace ReactSpa.Controllers
             });
         }
 
+        [HttpGet]
+        public async Task<ActionResult> RemoveRecord(string d)
+        {
+            DateTime date;
+            DateTime.TryParse(d, out date);
+            var result = await _recordManager.DeleteLeaveAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), date);
+            List<NotificationModel> resultModel =
+                await _recordManager.GetNotificationByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            return Json(new
+            {
+                payload = resultModel
+            });
+        }
+
+        /**bug options: showall for role, show deputy and show supervisor */
+        /**bug options: set display date range */
         [HttpPost]
         public async Task<ActionResult> GetInitNotifiedState()
         {
-            return Json(new {});
+            var result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                showAll: false, showDeputy: true, showSupervisor: true);
+            return Json(new {payload = result});
         }
+
+        [HttpPost]
+        public async Task<ActionResult> GetSelfNotifiedState()
+        {
+            var result = await _recordManager.GetNotificationByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            return Json(new {payload = result});
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> SetNotification([FromBody] SetNotificationModel m)
+        {
+            var result = await _recordManager.SetStatusOfApprovalAsync(m.RecordId, m.Status);
+            if (result)
+            {
+                List<NotificationModel> resultModel = await _recordManager.GetNotificationByIdAsync(
+                    User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return Json(new {payload = resultModel});
+            }
+            return Json(new {payload = new List<NotificationModel>(), status = false});
+        }
+    }
+
+    public class SetNotificationModel
+    {
+        public string RecordId { get; set; }
+        public string Status { get; set; }
     }
 }

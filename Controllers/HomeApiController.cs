@@ -37,7 +37,7 @@ namespace ReactSpa.Controllers
                         timeStart = record.OffTimeStart.Value;
                     if (record.OffTimeEnd != null)
                         timeEnd = record.OffTimeEnd.Value;
-                    offStatus = $"{timeStart.ToString("h':'m':'s")}-{timeEnd.ToString("h':'m':'s")} {record.OffType}";
+                    offStatus = $"{timeStart.ToString("h'æ™‚'")}-{timeEnd.ToString("h'æ™‚'")} {record.OffType}";
                 }
 
                 if (record.CheckInTime == null)
@@ -57,7 +57,7 @@ namespace ReactSpa.Controllers
                             {
                                 shouldCheckInDisable = shouldCheckInDisable,
                                 shouldCheckOutDisable = shouldCheckOutDisable,
-                                currentDate = DateTime.Today.ToString("yyyy¦~MM¤ëdd¤é (ddd)"),
+                                currentDate = DateTime.Today.ToString("yyyyå¹´MMæœˆddæ—¥ (ddd)"),
                                 currentTime = DateTime.Now.ToString("hh:mm:ss tt"),
                                 checkIn = record.CheckInTime,
                                 checkOut = record.CheckOutTime,
@@ -73,7 +73,7 @@ namespace ReactSpa.Controllers
                 {
                     shouldCheckInDisable = false,
                     shouldCheckOutDisable = true,
-                    currentDate = DateTime.Today.ToString("yyyy¦~MM¤ëdd¤é (ddd)"),
+                    currentDate = DateTime.Today.ToString("yyyyå¹´MMæœˆddæ—¥ (ddd)"),
                     currentTime = DateTime.Now.ToString("h:mm:ss tt")
                 }
             });
