@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Router, Route, HistoryBase } from 'react-router';
-import { Layout } from './components/Layout';
+import Layout from './components/Layout';
 import Home from './components/Home';
 import ManageAccount from './components/ManageAccount';
 import Confirm from './components/ManageAccount.Confirm';

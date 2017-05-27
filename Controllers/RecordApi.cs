@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
@@ -129,11 +130,29 @@ namespace ReactSpa.Controllers
             }
             return Json(new {payload = new List<NotificationModel>(), status = false});
         }
+
+        [HttpPost]
+        public async Task<ActionResult> Query([FromBody] QueryModel model)
+        {
+            return Json(new { model });
+        }
     }
 
     public class SetNotificationModel
     {
         public string RecordId { get; set; }
         public string Status { get; set; }
+    }
+
+    public class QueryModel
+    {
+        public string Id  { get; set; }
+        public string Options { get; set; }
+        
+        [DataType(DataType.Date)]
+        public DateTime FromDate { get; set; }
+        
+        [DataType(DataType.Date)]
+        public DateTime ToDate { get; set; }
     }
 }

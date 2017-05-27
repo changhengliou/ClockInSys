@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { UrlMapping } from '../routes';
 import { connect } from 'react-redux';
-
+import { actionCreators } from '../store/index';
 class NavMenu extends React.Component {
     constructor(props) {
         super(props);
@@ -11,20 +11,18 @@ class NavMenu extends React.Component {
     }
 
     openNav() {
-        if(typeof document === 'object')
-            document.getElementById("mySidenav").style.width = "300px";
+        this.props.onNavBarOpen();
     }
 
     closeNav() {
-        if(typeof document === 'object')
-            document.getElementById("mySidenav").style.width = "0";
+        this.props.onNavBarClose();
     }
 
     render() {
         var info = this.props.info;
         return (
             <div>
-                <div id="mySidenav" className="mps_left_nav">
+                <div id="mySidenav" className="mps_left_nav" style={{ width: this.props.style }}>
                     <div className="header">
                         <div className="email_add">{ info.userEmail }</div>
                         <div className="side_header_title">{ info.userName }</div>
@@ -52,7 +50,7 @@ class NavMenu extends React.Component {
                 <nav className="mps_top_nav">
                     <div className="top_hamburger" onClick={this.openNav}></div>
                     <Link to="/">
-                        <div className="system_name">穎哲資訊差勤系統</div>
+                        <div className="system_name">穎哲資訊系統</div>
                     </Link>
                     <div className="nav_top_right">
                         {
@@ -87,10 +85,22 @@ class NavMenu extends React.Component {
 
 const mapStateToProps = (state) => {
     return {
-        info: state.__info__
+        info: state.__info__,
+        style: state.__w3x__.__s__
     };
 }
 
-const wrapper = connect(mapStateToProps);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onNavBarOpen: () => {
+            dispatch(actionCreators.onNavBarOpen());
+        },
+        onNavBarClose: () => {
+            dispatch(actionCreators.onNavBarClose());
+        }
+    }
+}
+
+const wrapper = connect(mapStateToProps, mapDispatchToProps);
 
 export default wrapper(NavMenu);
