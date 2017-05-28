@@ -311,6 +311,55 @@ namespace ReactSpa.Data
                 }
             }
         }
+
+        /** @params id, if null, select all 
+          * @parmas from, begining time
+          * @params to, ending selected time
+          * @params options,
+        */
+        public async Task<List<ReportModel>> GetRecordsAsync(string id, DateTime fromT, DateTime toT,
+            RecordOptions option = RecordOptions.SelectAll,
+            bool includePending = false)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                IQueryable<ReportModel> records = from record in dbContext.CheckRecord
+                    join user in dbContext.UserInfo on
+                    record.UserId equals user.Id
+                    where record.CheckedDate >= fromT && record.CheckedDate <= toT
+                    select new ReportModel
+                    {
+                        UserId = user.Id,
+                        UserName = user.UserName,
+                        RecordId = record.Id,
+                        CheckedDate = record.CheckedDate.ToString("yyyy-MM-dd"),
+                        CheckInTime = record.CheckInTime.ToString(),
+                        CheckOutTime = record.CheckOutTime.ToString(),
+                        GeoLocation1 = record.GeoLocation1,
+                        GeoLocation2 = record.GeoLocation2,
+                        OffReason = record.OffReason,
+                        OffTimeStart = record.OffTimeStart.ToString(),
+                        OffTimeEnd = record.OffTimeEnd.ToString(),
+                        OffType = record.OffType,
+                        StatusOfApproval = record.StatusOfApproval
+                    };
+                if (!string.IsNullOrWhiteSpace(id))
+                {
+                    records = records.Where(s => s.UserId == id);
+                }
+                switch (option)
+                {
+                    case RecordOptions.SelectAll:
+                        return await records.ToListAsync();
+                    case RecordOptions.SelectLeave:
+                        return await records.Where(s => !string.IsNullOrWhiteSpace(s.OffType)).ToListAsync();
+                    case RecordOptions.SelectNormal:
+                        return await records.Where(s => !string.IsNullOrWhiteSpace(s.CheckInTime)).ToListAsync();
+                    default:
+                        throw new Exception("Invalid Option");
+                }
+            }
+        }
     }
 
     public class ApplyOffModel
@@ -371,5 +420,41 @@ namespace ReactSpa.Data
         public string OffReason { get; set; }
 
         public string StatusOfApproval { get; set; }
+    }
+
+    public class ReportModel
+    {
+        public string UserId { get; set; }
+
+        public string UserName { get; set; }
+
+        public string RecordId { get; set; }
+
+        public string CheckedDate { get; set; }
+
+        public string CheckInTime { get; set; }
+
+        public string CheckOutTime { get; set; }
+
+        public string GeoLocation1 { get; set; }
+
+        public string GeoLocation2 { get; set; }
+
+        public string OffType { get; set; }
+
+        public string OffTimeStart { get; set; }
+        
+        public string OffTimeEnd { get; set; }
+
+        public string OffReason { get; set; }
+
+        public string StatusOfApproval { get; set; }
+    }
+
+    public enum RecordOptions
+    {
+        SelectAll = 0,
+        SelectNormal = 1,
+        SelectLeave = 2
     }
 }

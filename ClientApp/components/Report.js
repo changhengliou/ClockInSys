@@ -7,6 +7,7 @@ import Table from './Report.Table';
 
 class Report extends Component {
     render() {
+        // showCheckIn, showGeo, showOff, showStatus
         var props = this.props.data;
         var material;
         switch(props.status){
@@ -21,7 +22,19 @@ class Report extends Component {
                 material = <div style={{fontSize: '20px'}}>載入中...</div>;
                 break;
             case 2:
-                material = <Table/>;
+                var showCheckIn = true, showGeo = true, showOff = true, showStatus = true;
+                if(props.options === '1') {
+                    showOff = false;
+                    showStatus = false;
+                }
+                if(props.options === '2') {
+                    showCheckIn = false;
+                    showGeo = false;
+                }
+                material = <Table showCheckIn={ showCheckIn } 
+                                  showOff={ showOff }
+                                  showGeo={ showGeo }
+                                  showStatus={ showStatus }/>;
                 break;
         }
         var btn = props.status === 0 || props.status === 1 ? null : (

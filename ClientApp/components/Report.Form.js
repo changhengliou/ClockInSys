@@ -39,8 +39,8 @@ class Form extends Component {
         var dateOpt = props.dateOptions === '-1' ? (
             <div>
                 <div style={{marginTop: '16px'}}>
-                    <label style={{width:'20%', marginRight: '3%',fontSize: '20px'}}>起:</label>
-                    <div style={{marginRight: '32%', width: '45%', display: 'inline-block' }}>
+                    <label style={{width:'50px', marginRight: '3%',fontSize: '20px',display: 'inline-block'}}>起:</label>
+                    <div style={{width: '45%', marginRight: '88px', display: 'inline-block', height:'25px'}}>
                         <DatePicker name="from" selectsStart dropdownMode="select"
                             showMonthDropdown showYearDropdown
                             customInput={<DateInput/>} 
@@ -51,8 +51,8 @@ class Form extends Component {
                     </div>
                 </div>
                 <div style={{marginTop: '16px'}}>
-                    <label style={{width:'20%', marginRight: '3%',fontSize: '20px'}}>訖:</label>
-                    <div style={{marginRight: '32%', width: '45%', display: 'inline-block' }}>
+                    <label style={{width:'50px', marginRight: '3%',fontSize: '20px',display: 'inline-block'}}>訖:</label>
+                    <div style={{width: '45%', marginRight: '88px', display: 'inline-block', height:'25px'}}>
                         <DatePicker name="to" selectsEnd dropdownMode="select"
                             showMonthDropdown showYearDropdown
                             customInput={<DateInput/>} 
@@ -67,8 +67,8 @@ class Form extends Component {
         return (
             <div className='selectReport'>
                 <div>
-                    <label style={{width:'20%', marginRight: '3%',fontSize: '20px'}}>姓名:</label>
-                    <div style={{width: '45%', marginRight: '3%', display: 'inline-block', height:'25px'}}>
+                    <label style={{width:'50px', marginRight: '3%',fontSize: '20px',display: 'inline-block'}}>姓名:</label>
+                    <div style={{width: '45%', marginRight: '10px', display: 'inline-block', height:'25px'}}>
                         <Select.Async disabled={ props.all }
                                       value={ props.id }
                                       onChange={ this.props.onNameChanged }
@@ -76,12 +76,12 @@ class Form extends Component {
                                       ignoreCase={true}
                                       loadOptions={ getOptions }></Select.Async>
                     </div>
-                    <input style={{width: '3%'}}type="checkbox" checked={props.all} onChange={() => this.props.onAllChanged()}/>
-                    <label style={{width: '26%'}}>全體員工</label>
+                    <input style={{width: '12px'}}type="checkbox" checked={props.all} onChange={() => this.props.onAllChanged()}/>
+                    <label style={{width: '88px'}}>全體員工</label>
                 </div>
                 <div style={{marginTop: '16px'}}>
-                    <label style={{width:'20%', marginRight: '3%',fontSize: '20px'}}>種類:</label>
-                    <div style={{width: '45%', marginRight: '32%', display: 'inline-block', height:'25px'}}>
+                    <label style={{width:'50px', marginRight: '3%',fontSize: '20px',display: 'inline-block'}}>種類:</label>
+                    <div style={{width: '45%', marginRight: '88px', display: 'inline-block', height:'25px'}}>
                         <Select searchable={ false } 
                                 clearable={ false }
                                 value={ props.options }
@@ -90,8 +90,8 @@ class Form extends Component {
                     </div>
                 </div>
                 <div style={{marginTop: '16px'}}>
-                    <label style={{width:'20%', marginRight: '3%',fontSize: '20px'}}>時間:</label>
-                    <div style={{width: '45%', marginRight: '32%', display: 'inline-block', height:'25px'}}>
+                    <label style={{width:'50px', marginRight: '3%',fontSize: '20px',display: 'inline-block'}}>時間:</label>
+                    <div style={{width: '45%', marginRight: '88px', display: 'inline-block', height:'25px'}}>
                         <Select searchable={ false } 
                                 clearable={ false }
                                 value={ props.dateOptions }
@@ -100,7 +100,7 @@ class Form extends Component {
                     </div>
                 </div>
                 { dateOpt }
-                <div style={{width: '150px', margin: '0 auto', marginTop: '16px'}}>
+                <div style={{width: '30%', margin: '0 auto', marginTop: '16px'}}>
                     <button className='btn_date btn_default' onClick={ () => this.props.query() }>查詢</button>
                 </div>
             </div>

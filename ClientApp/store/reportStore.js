@@ -2,13 +2,16 @@ import { fetch, addTask } from 'domain-task';
 import moment from 'moment';
 
 const initState = {
+    t: -1,
     all: true,
     id: null,
     options: '0',
     dateOptions: '0',
     fromDate: new moment(),
     toDate: new moment(),
-    status: 0 // 0 = form, 1 = isLoading, 2 = table, -1 = failed
+    status: 0, // 0 = form, 1 = isLoading, 2 = table, -1 = failed
+    data: [],
+    showDialog: false
 }
 
 export const getDateOptions = (options) => {
@@ -69,7 +72,7 @@ export const actionCreators = {
                 'Content-Type': 'application/json; charset=UTF-8',
             },
             body: JSON.stringify({
-                id: props.all ? '0' : props.id,
+                id: props.all ? null : props.id,
                 options: props.options,
                 fromDate: props.dateOptions === '-1' ?
                     props.fromDate.format('YYYY-MM-DD') : getDateOptions(props.dateOptions),
@@ -77,7 +80,7 @@ export const actionCreators = {
                     props.toDate.format('YYYY-MM-DD') : new moment().format('YYYY-MM-DD'),
             })
         }).then(response => response.json()).then(data => {
-            dispatch({ type: 'ON_REPORT_QUERY_FINISHED', payload: { status: 2 } });
+            dispatch({ type: 'ON_REPORT_QUERY_FINISHED', payload: { status: 2, data: data.payload } });
         }).catch(error => {
             dispatch({ type: 'ON_REPORT_QUERY_FAILED', payload: { status: -1 } });
         });
@@ -85,11 +88,21 @@ export const actionCreators = {
     },
     onGoBackClick: () => (dispatch, getState) => {
         dispatch({ type: 'ON_GOBACK_CLICK' });
-    }
+    },
+    onChangingDataBtnClick: (e) => (dispatch, getState) => {
+        dispatch({ type: 'ON_CHANGING_DATA_BTN_CLICK', payload: { showDialog: true, t: e } });
+    },
+    onDialogClose: () => (dispatch, getState) => {
+        dispatch({ type: 'ON_CHANGING_DATA_DIALOG_CLOSE', payload: { showDialog: false } });
+    },
+    onInputChange: (val, name) => (dispatch, getState) => {
+        var s = getState().report;
+        s.data[s.t][name] = val;
+        dispatch({ type: 'ON_INPUT_DATA_CHANGE', payload: s.data[s.t] });
+    },
 }
 
 export const reducer = (state = initState, action) => {
-    var _data = Object.assign({}, state, action.payload);
     switch (action.type) {
         case 'ON_NAME_CHANGE':
         case 'ON_ALL_CHANGE':
@@ -99,9 +112,15 @@ export const reducer = (state = initState, action) => {
         case 'ON_TO_DATE_CHANGE':
         case 'ON_REPORT_QUERY':
         case 'ON_REPORT_QUERY_FINISHED':
-            return _data;
+        case 'ON_CHANGING_DATA_BTN_CLICK':
+        case 'ON_CHANGING_DATA_DIALOG_CLOSE':
+            return Object.assign({}, state, action.payload);
+        case 'ON_INPUT_DATA_CHANGE':
+            var z = {...state };
+            z.data[z.t] = action.payload;
+            return z;
         case 'ON_REPORT_QUERY_FAILED':
-            return _data;
+            return Object.assign({}, state, action.payload);
         case 'ON_GOBACK_CLICK':
         default:
             return initState;

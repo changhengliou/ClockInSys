@@ -134,7 +134,15 @@ namespace ReactSpa.Controllers
         [HttpPost]
         public async Task<ActionResult> Query([FromBody] QueryModel model)
         {
-            return Json(new { model });
+            var options = RecordOptions.SelectAll;
+            if (model.Options == "1")
+                options = RecordOptions.SelectNormal;
+            else if (model.Options == "2")
+                options = RecordOptions.SelectLeave;
+            else if (model.Options != "0")
+                return BadRequest();
+            var result = await _recordManager.GetRecordsAsync(model.Id, model.FromDate, model.ToDate, options);
+            return Json(new {payload = result});
         }
     }
 
@@ -146,12 +154,12 @@ namespace ReactSpa.Controllers
 
     public class QueryModel
     {
-        public string Id  { get; set; }
+        public string Id { get; set; }
         public string Options { get; set; }
-        
+
         [DataType(DataType.Date)]
         public DateTime FromDate { get; set; }
-        
+
         [DataType(DataType.Date)]
         public DateTime ToDate { get; set; }
     }
