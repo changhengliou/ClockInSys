@@ -12,15 +12,20 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import Dialog from 'rc-dialog';
 import 'rc-dialog/assets/index.css';
+import DialogContent from './Report.Dialog';
 
 class Table extends Component {
     constructor(props) {
         super(props);
         this.renderTitle = this.renderTitle.bind(this);
         this.renderColumn = this.renderColumn.bind(this);
-        this.renderDialog = this.renderDialog.bind(this);
+    }
+
+    
+    componentWillMount() {
         this.columns = this.renderColumn();
     }
+    
 
     renderTitle(props) {
         var dopt = '', opt = '', title = '', result;
@@ -61,6 +66,7 @@ class Table extends Component {
     }
 
     renderColumn() {
+        var val = this.props.data.data;
         var columns = [{
             Header: '姓名',
             accessor: 'userName'
@@ -92,7 +98,16 @@ class Table extends Component {
                 accessor: 'offType',
             }, {
                 Header: '請假時間',
-                accessor: 'offTime',
+                accessor: 'offTimeStart',
+                Cell: props => {
+                    return (
+                        <span>
+                            { val[props.index] ? val[props.index].offTimeStart ? 
+                              `${val[props.index].offTimeStart} - ${val[props.index].offTimeEnd}` :
+                               null : null }
+                        </span>
+                    );
+                }
             }, {
                 Header: '請假原因',
                 accessor: 'offReason',
@@ -102,6 +117,12 @@ class Table extends Component {
             columns.push({
                 Header: '狀態',
                 accessor: 'statusOfApproval',
+                Cell: props => {
+                    return (
+                    <span>
+                        { val[props.index].offType ? props.value : null }
+                    </span>);
+                }
             });
         }
         columns.push({
@@ -118,129 +139,8 @@ class Table extends Component {
         return columns;
     }
 
-    renderDialog(content) {
-        if(!content)
-            return null;
-        var style = {
-            title: {
-                fontWeight: '900', textAlign: 'center', marginBottom: '8px'
-            },
-            label: {
-                width: '110px',
-                display: 'inline-block',
-            },
-            input: {
-                width: '50%'
-            },
-            wrapper: {
-                marginBottom: '8px'
-            }
-        };
-        var showCheckIn = this.props.showCheckIn ? (
-            <div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>上班時間:</span>
-                    <input style={style.input}
-                           type='time'
-                           name='checkInTime' 
-                           value={ content.checkInTime ? content.checkInTime.slice(0, 8) : null }
-                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>下班時間:</span>
-                    <input style={style.input}
-                           type='time' 
-                           name='checkOutTime'
-                           value={ content.checkOutTime ? content.checkOutTime.slice(0, 8) : null }
-                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-            </div>
-        ) : null;
-        var showGeo = this.props.showGeo ? (
-            <div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>上班打卡座標:</span>
-                    <input style={style.input}
-                           type='text' 
-                           name='geoLocation1'
-                           value={ content.geoLocation1 }
-                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>下班打卡座標:</span>
-                    <input style={style.input}
-                           type='text' 
-                           name='geoLocation2'
-                           value={ content.geoLocation2 }
-                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-            </div>
-        ) : null;
-        var showOff = this.props.showOff ? (
-            <div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>請假類別:</span>
-                    <input style={style.input}
-                           type='select' 
-                           value={ content.offType }/>
-                </div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>請假時間(起):</span>
-                    <input style={style.input}
-                           type='time' 
-                           value={ content.offTimeStart }
-                           name='offTimeStart'
-                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>請假時間(迄):</span>
-                    <input style={style.input}
-                           type='time' 
-                           value={ content.offTimeEnd }
-                           name='offTimeEnd'
-                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-                <div style={style.wrapper}>
-                    <span style={style.label}>請假原因:</span>
-                    <textarea style={style.input}
-                              value={ content.offReason }
-                              name='offReason'
-                              onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
-                </div>
-            </div>
-        ) : null;
-        var showStatus = this.props.showStatus ? (
-            <div>
-                <span style={style.label}>狀態:</span>
-                <input style={style.input}
-                       type='select' 
-                       value={ content.statusOfApproval }/>
-            </div>
-        ) : null;
-        return (
-            <div className='selectReport'>
-                <div style={ style.title }>{ content.userName }</div>
-                <div style={ style.title }>
-                    { new moment(content.checkedDate, 'YYYY-MM-DD').format('YYYY年MM月DD日') }
-                </div>
-                { showCheckIn }
-                { showGeo }
-                { showOff }
-                { showStatus }
-                <div>
-                    <button className='btn_date btn_date_group btn_default'>確認修改</button>
-                    <button className='btn_date btn_date_group btn_danger'>刪除紀錄</button>
-                    <button className='btn_date btn_date_group btn_info'
-                            onClick={ () => this.props.onDialogClose() }>取消</button>
-                </div>
-            </div>
-        );
-    }
-
     render() {
         var props = this.props.data;
-        var content = props.t >= 0 ? props.data[props.t] : null;
-        var contentInDialog = this.renderDialog(content);
         var showPageSizeOptions = true;
         if(typeof window === 'object') {
             if(window.innerWidth < 600)
@@ -250,7 +150,28 @@ class Table extends Component {
         return (
             <div style={{textAlign: 'left', width: '90%', margin: '0 auto'}}>
                 <h3 style={{marginBottom: '10px'}}>{ this.renderTitle(props) }</h3>
-                <ReactTable data={props.data}
+                <div style={{verticalAlign: 'middle', textAlign: 'left', marginBottom: '10px'}}>
+                    <div style={{width: '100px', display: 'inline-block', marginRight:'2%'}}>
+                        <DatePicker dropdownMode="select"
+                            showMonthDropdown showYearDropdown
+                            customInput={<DateInput/>}
+                            onChange={ this.props.onDateChange } 
+                            selected={ new moment(props.date, 'YYYY-MM-DD') }/>
+                    </div>
+                    <div style={{width: '36%', display: 'inline-block', height: '22px', marginRight:'2%'}}>
+                        <Select.Async value={ props.name }
+                              onChange={ this.props.handleNameChange }
+                              ignoreCase={ true }
+                              loadOptions={ getOptions }/>
+                    </div>
+                    <button className='btn_date btn_default' 
+                            style={{display: 'inline-block', width: '100px'}}
+                            onClick={ () => {
+                                if(props.name)
+                                    this.props.onNewRecord()
+                            } }>新增紀錄</button>
+                </div>
+                <ReactTable data={ props.data }
                             columns={this.columns}
                             loading={props.isLoading}
                             defaultPageSize={5}
@@ -271,12 +192,20 @@ class Table extends Component {
                             animation="zoom"
                             maskAnimation="fade"
                             style={{ top: '6%' }}>
-                        { contentInDialog }
+                        <DialogContent showCheckIn={ this.props.showCheckIn }
+                                       showGeo={ this.props.showGeo }
+                                       showOff={ this.props.showOff }
+                                       showStatus={ this.props.showStatus }
+                                       onInputChange={ this.props.onInputChange }
+                                       onSubmitReport={ this.props.onSubmitReport }
+                                       onDeleteReport={ this.props.onDeleteReport }
+                                       onDialogClose={ this.props.onDialogClose }/>
                 </Dialog>
             </div>
         );
     }
 }
+
 const mapStateToProps = (state) => {
     return {
         data: state.report
@@ -293,6 +222,24 @@ const mapDispatchToProps = (dispatch) => {
         },
         onInputChange: (val, name) => {
             return dispatch(actionCreators.onInputChange(val, name));
+        },
+        onSubmitReport: () => {
+            return dispatch(actionCreators.onSubmitReport());
+        },
+        onDeleteReport: () => {
+            return dispatch(actionCreators.onDeleteReport());
+        },
+        handleNameChange: (val) => {
+            var z = null;
+            if(val)
+                z = val.value;
+            return dispatch(actionCreators.handleNameChange(z));
+        },
+        onDateChange: (val) => {
+            return dispatch(actionCreators.onDateChange(val));
+        },
+        onNewRecord: () => {
+            return dispatch(actionCreators.onNewRecord());
         }
     }
 }

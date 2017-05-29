@@ -326,7 +326,7 @@ namespace ReactSpa.Data
                 IQueryable<ReportModel> records = from record in dbContext.CheckRecord
                     join user in dbContext.UserInfo on
                     record.UserId equals user.Id
-                    where record.CheckedDate >= fromT && record.CheckedDate <= toT
+                    where record.CheckedDate >= fromT.Date && record.CheckedDate <= toT.Date
                     select new ReportModel
                     {
                         UserId = user.Id,
@@ -340,7 +340,7 @@ namespace ReactSpa.Data
                         OffReason = record.OffReason,
                         OffTimeStart = record.OffTimeStart.ToString(),
                         OffTimeEnd = record.OffTimeEnd.ToString(),
-                        OffType = record.OffType,
+                        OffType = string.IsNullOrWhiteSpace(record.OffType) ? "" : record.OffType,
                         StatusOfApproval = record.StatusOfApproval
                     };
                 if (!string.IsNullOrWhiteSpace(id))
@@ -358,6 +358,61 @@ namespace ReactSpa.Data
                     default:
                         throw new Exception("Invalid Option");
                 }
+            }
+        }
+
+        public async Task InsertOrUpdateRecordAsync(EditRecordModel model)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+                if (string.IsNullOrWhiteSpace(model.RecordId))
+                {
+                    var r = new CheckRecord
+                    {
+                        UserId = model.UserId,
+                        CheckedDate = model.CheckedDate,
+                        CheckInTime = model.CheckInTime,
+                        CheckOutTime = model.CheckOutTime,
+                        GeoLocation1 = model.GeoLocation1,
+                        GeoLocation2 = model.GeoLocation2,
+                        OffType = model.OffType,
+                        OffTimeStart = model.OffTimeStart,
+                        OffTimeEnd = model.OffTimeEnd,
+                        OffReason = model.OffReason,
+                        StatusOfApproval = model.StatusOfApproval
+                    };
+                    await dbContext.CheckRecord.AddAsync(r);
+                }
+                else
+                {
+                    var record = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.Id == model.RecordId);
+                    if (record != null)
+                    {
+                        record.CheckInTime = model.CheckInTime;
+                        record.CheckOutTime = model.CheckOutTime;
+                        record.GeoLocation1 = model.GeoLocation1;
+                        record.GeoLocation2 = model.GeoLocation2;
+                        record.OffType = model.OffType;
+                        record.OffTimeStart = model.OffTimeStart;
+                        record.OffTimeEnd = model.OffTimeEnd;
+                        record.OffReason = model.OffReason;
+                        record.StatusOfApproval = model.StatusOfApproval;
+                        dbContext.Entry(record).State = EntityState.Modified;
+                    }
+                }
+                await dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteRecordByRecordIdAsync(string recordId)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                var obj = new CheckRecord {Id = recordId};
+                dbContext.CheckRecord.Attach(obj);
+                dbContext.Entry(obj).State = EntityState.Deleted;
+                await dbContext.SaveChangesAsync();
             }
         }
     }
@@ -443,7 +498,7 @@ namespace ReactSpa.Data
         public string OffType { get; set; }
 
         public string OffTimeStart { get; set; }
-        
+
         public string OffTimeEnd { get; set; }
 
         public string OffReason { get; set; }

@@ -134,15 +134,45 @@ namespace ReactSpa.Controllers
         [HttpPost]
         public async Task<ActionResult> Query([FromBody] QueryModel model)
         {
+            var result = await QueryRecord(model);
+            return Json(new {payload = result});
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> EditRecord([FromBody] EditRecordModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest();
+            await _recordManager.InsertOrUpdateRecordAsync(model);
+            var result = await QueryRecord(new QueryModel
+            {
+                FromDate = model.FromDate,
+                Id = model.Id,
+                Options = model.Options,
+                RecordId = model.RecordId,
+                ToDate = model.ToDate
+            });
+            return Json(new {payload = result, model});
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> DeleteRecord([FromBody] QueryModel model)
+        {
+            await _recordManager.DeleteRecordByRecordIdAsync(model.RecordId);
+            var result = await QueryRecord(model);
+            return Json(new {payload = result});
+        }
+
+        public async Task<List<ReportModel>> QueryRecord(QueryModel model)
+        {
             var options = RecordOptions.SelectAll;
             if (model.Options == "1")
                 options = RecordOptions.SelectNormal;
             else if (model.Options == "2")
                 options = RecordOptions.SelectLeave;
             else if (model.Options != "0")
-                return BadRequest();
-            var result = await _recordManager.GetRecordsAsync(model.Id, model.FromDate, model.ToDate, options);
-            return Json(new {payload = result});
+                throw new Exception("Invalid Options");
+            return await _recordManager.GetRecordsAsync(model.Id, model.FromDate, model.ToDate, options);
         }
     }
 
@@ -154,12 +184,39 @@ namespace ReactSpa.Controllers
 
     public class QueryModel
     {
+        public string RecordId { get; set; }
         public string Id { get; set; }
         public string Options { get; set; }
-
         [DataType(DataType.Date)]
         public DateTime FromDate { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime ToDate { get; set; }
+    }
 
+    public class EditRecordModel
+    {
+        public string UserId { get; set; }
+        [Required]
+        [DataType(DataType.Date)]
+        public DateTime CheckedDate { get; set; }
+        [DataType((DataType.Time))]
+        public TimeSpan? CheckInTime { get; set; }
+        [DataType((DataType.Time))]
+        public TimeSpan? CheckOutTime { get; set; }
+        public string GeoLocation1 { get; set; }
+        public string GeoLocation2 { get; set; }
+        public string OffType { get; set; }
+        [DataType((DataType.Time))]
+        public TimeSpan? OffTimeStart { get; set; }
+        [DataType((DataType.Time))]
+        public TimeSpan? OffTimeEnd { get; set; }
+        public string OffReason { get; set; }
+        public string StatusOfApproval { get; set; }
+        public string RecordId { get; set; }
+        public string Id { get; set; }
+        public string Options { get; set; }
+        [DataType(DataType.Date)]
+        public DateTime FromDate { get; set; }
         [DataType(DataType.Date)]
         public DateTime ToDate { get; set; }
     }
