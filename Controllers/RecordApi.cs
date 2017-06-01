@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -10,6 +11,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using ReactSpa.Data;
 
 namespace ReactSpa.Controllers
@@ -43,7 +46,6 @@ namespace ReactSpa.Controllers
         [HttpGet]
         public async Task<ActionResult> GetInitState(int y, int m)
         {
-            ;
             try
             {
                 List<OffRecordModel> model =
@@ -174,6 +176,80 @@ namespace ReactSpa.Controllers
                 throw new Exception("Invalid Options");
             return await _recordManager.GetRecordsAsync(model.Id, model.FromDate, model.ToDate, options);
         }
+
+        [HttpGet]
+        public async Task<ActionResult> ExportXlsx(string a, string b, string c, string d)
+        {
+            try
+            {
+                DateTime from = DateTime.Parse(c);
+                DateTime to = DateTime.Parse(d);
+                var result = await QueryRecord(new QueryModel
+                {
+                    Id = a,
+                    Options = b,
+                    FromDate = from,
+                    ToDate = to
+                });
+
+                using (ExcelPackage pkg = new ExcelPackage(new FileInfo($"{Guid.NewGuid()}.xlsx")))
+                {
+                    ExcelWorksheet worksheet = pkg.Workbook.Worksheets.Add("報表1");
+                    for (int x = 1; x < 10; x++)
+                    {
+                        worksheet.Column(x).Width = 15;
+                        worksheet.Column(x).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+                    worksheet.Cells[1, 1].Value = $"{c} - {d} 出勤狀況表";
+                    worksheet.Cells[1, 1, 1, 9].Merge = true;
+                    worksheet.Cells[1, 1, 1, 9].Style.Font.Bold = true;
+                    worksheet.Cells[1, 1, 1, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[2, 1].Value = "姓名";
+                    worksheet.Cells[2, 2].Value = "日期";
+                    worksheet.Cells[2, 3].Value = "上班時間";
+                    worksheet.Cells[2, 4].Value = "下班時間";
+                    worksheet.Cells[2, 5].Value = "上班打卡座標";
+                    worksheet.Cells[2, 6].Value = "下班打卡座標";
+                    worksheet.Cells[2, 7].Value = "請假類別";
+                    worksheet.Cells[2, 8].Value = "請假時間";
+                    worksheet.Cells[2, 9].Value = "請假原因";
+
+                    for (int i = 0; i < result.Count; i++)
+                    {
+                        worksheet.Cells[$"A{i + 3}"].Value = result[i].UserName;
+                        worksheet.Cells[$"B{i + 3}"].Value = result[i].CheckedDate;
+                        worksheet.Cells[$"C{i + 3}"].Value = result[i].CheckInTime;
+                        worksheet.Cells[$"D{i + 3}"].Value = result[i].CheckOutTime;
+                        worksheet.Cells[$"E{i + 3}"].Value = result[i].GeoLocation1;
+                        worksheet.Cells[$"F{i + 3}"].Value = result[i].GeoLocation2;
+                        if (result[i].StatusOfApproval == StatusOfApprovalEnum.APPROVED())
+                        {
+                            worksheet.Cells[$"G{i + 3}"].Value = result[i].OffType;
+                            worksheet.Cells[$"H{i + 3}"].Value = $"{result[i].OffTimeStart} - {result[i].OffTimeEnd}";
+                            worksheet.Cells[$"I{i + 3}"].Value = result[i].OffReason;
+                        }
+                    }
+
+                    byte[] file = pkg.GetAsByteArray();
+                    return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                }
+            }
+            catch (ArgumentNullException e)
+            {
+                return BadRequest("Invalid parameters.");
+            }
+            catch (FormatException e)
+            {
+                return BadRequest("Invalid parameters.");
+            }
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> GetAbsentStatus(string y, string m)
+        {
+            var result = await _recordManager.GetMonthlyOffRecordAsync(y, m);
+            return Json(new {payload = result});
+        }
     }
 
     public class SetNotificationModel
@@ -187,8 +263,10 @@ namespace ReactSpa.Controllers
         public string RecordId { get; set; }
         public string Id { get; set; }
         public string Options { get; set; }
+
         [DataType(DataType.Date)]
         public DateTime FromDate { get; set; }
+
         [DataType(DataType.Date)]
         public DateTime ToDate { get; set; }
     }
@@ -196,27 +274,36 @@ namespace ReactSpa.Controllers
     public class EditRecordModel
     {
         public string UserId { get; set; }
+
         [Required]
         [DataType(DataType.Date)]
         public DateTime CheckedDate { get; set; }
+
         [DataType((DataType.Time))]
         public TimeSpan? CheckInTime { get; set; }
+
         [DataType((DataType.Time))]
         public TimeSpan? CheckOutTime { get; set; }
+
         public string GeoLocation1 { get; set; }
         public string GeoLocation2 { get; set; }
         public string OffType { get; set; }
+
         [DataType((DataType.Time))]
         public TimeSpan? OffTimeStart { get; set; }
+
         [DataType((DataType.Time))]
         public TimeSpan? OffTimeEnd { get; set; }
+
         public string OffReason { get; set; }
         public string StatusOfApproval { get; set; }
         public string RecordId { get; set; }
         public string Id { get; set; }
         public string Options { get; set; }
+
         [DataType(DataType.Date)]
         public DateTime FromDate { get; set; }
+
         [DataType(DataType.Date)]
         public DateTime ToDate { get; set; }
     }

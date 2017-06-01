@@ -158,6 +158,7 @@ export const actionCreators = {
                     s.toDate.format('YYYY-MM-DD') : new moment().format('YYYY-MM-DD'),
             })
         }).then(response => response.json()).then(data => {
+            console.log(data.payload);
             dispatch({ type: 'ON_REPORT_QUERY_EDIT_FINISHED', payload: { data: data.payload, isLoading: false } });
         }).catch(error => {
             dispatch({ type: 'ON_REPORT_QUERY_EDIT_FAILED' });

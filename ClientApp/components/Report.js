@@ -34,7 +34,8 @@ class Report extends Component {
                 material = <Table showCheckIn={ showCheckIn } 
                                   showOff={ showOff }
                                   showGeo={ showGeo }
-                                  showStatus={ showStatus }/>;
+                                  showStatus={ showStatus }
+                                  showBtn={ true }/>;
                 break;
         }
         var btn = props.status === 0 || props.status === 1 ? null : (

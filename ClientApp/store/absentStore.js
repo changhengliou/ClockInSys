@@ -4,13 +4,21 @@ import moment from 'moment';
 const initState = {
     isLoading: false,
     showDialog: false,
-    events: []
+    data: [],
+    model: {
+        userName: '',
+        checkedDate: '',
+        offTimeStart: '',
+        offTimeEnd: '',
+        offType: '',
+        offReason: ''
+    }
 }
 
 export const actionCreators = {
     getInitState: (year, month) => (dispatch, getState) => {
         dispatch({ type: 'REQUEST_ABSENCE_INIT_STATE', payload: { isLoading: true } });
-        let fetchTask = fetch(`api/record/getInitState?y=${year}&m=${month}`, {
+        let fetchTask = fetch(`api/record/GetAbsentStatus?y=${year}&m=${month}`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -18,14 +26,22 @@ export const actionCreators = {
                 'Content-Type': 'application/json; charset=UTF-8',
             }
         }).then(response => response.json()).then(data => {
-            dispatch({ type: 'REQUEST_ABSENCE_INIT_STATE_FINISHED', payload: { isLoading: false, events: data.payload } });
+            dispatch({ type: 'REQUEST_ABSENCE_INIT_STATE_FINISHED', payload: { isLoading: false, data: data.payload } });
         }).catch(error => {
             dispatch({ type: 'REQUEST_ABSENCE_INIT_STATE_FAILED' });
         });
         addTask(fetchTask);
     },
-    onDialogOpen: () => (dispatch, getState) => {
-        dispatch({ type: 'ON_ABSENCE_DIALOG_OPEN', payload: { showDialog: true } });
+    onDialogOpen: (info) => (dispatch, getState) => {
+        var model = {
+            userName: info.userName,
+            checkedDate: info.checkedDate,
+            offTimeStart: info.offTimeStart,
+            offTimeEnd: info.offTimeEnd,
+            offType: info.offType,
+            offReason: info.offReason
+        }
+        dispatch({ type: 'ON_ABSENCE_DIALOG_OPEN', payload: { showDialog: true, model: model } });
     },
     onDialogClose: () => (dispatch, getState) => {
         dispatch({ type: 'ON_ABSENCE_DIALOG_CLOSE', payload: { showDialog: false } });

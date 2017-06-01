@@ -60,3 +60,30 @@
         margin-bottom: 0px;
     }
 }
+
+.dot {
+    width: 15px;
+    height: 15px;
+    -webkit-border-radius: 25px;
+    -moz-border-radius: 25px;
+    border-radius: 25px;
+    display: inline-block;
+    margin-right: 12px;
+}
+
+.red_dot {
+    background: red;
+}
+
+.blue_dot {
+    background: #3174ad;
+}
+
+.label_dot {
+    margin-right: 12px;
+}
+
+.div_dot {
+    margin-bottom: 12px;
+    text-align: right !important;
+}

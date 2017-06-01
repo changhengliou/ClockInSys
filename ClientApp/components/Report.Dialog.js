@@ -3,7 +3,7 @@ import {connect} from 'react-redux';
 import moment from 'moment';
 import OffOption from './DayOff.Options';
 
-const style = {
+export const style = {
     title: {
         fontWeight: '900', textAlign: 'center', marginBottom: '8px'
     },
@@ -12,13 +12,13 @@ const style = {
         display: 'inline-block',
     },
     input: {
+        display: 'inline-block',
         textAlign: 'center',
-        width: '50%'
-    },
-    select: {
         width: '50%',
         height: '26px'
     },
+    textarea: { width: '50%' },
+    select: { width: '50%', height: '26px' },
     wrapper: { marginBottom: '8px' },
     disabled: { backgroundColor: '#ccc', borderColor: '#bbb' }
 };
@@ -30,12 +30,25 @@ class DialogContent extends Component {
         return !(JSON.stringify(props) === JSON.stringify(next));
     }
     render() {
+        console.log(this.props);
         var props = this.props.data;
         var disabledNormal = !props.offType && !props.checkInTime && !props.checkOutTime ? true : false;
         var disabledOff = !props.offType || 
                           (props.offType && props.offTimeStart && props.offTimeEnd) ? 
                           false : true;
         var disabledConfirmBtn = disabledNormal || disabledOff;
+        if (props.checkInTime === '' && this.refs.checkInTime) {
+            this.refs.checkInTime.value = '';
+        }
+        if (props.checkOutTime === ''  && this.refs.checkOutTime) {
+            this.refs.checkOutTime.value = '';
+        }
+        if (props.offTimeStart === ''  && this.refs.offTimeStart) {
+            this.refs.offTimeStart.value = '';
+        }
+        if (props.offTimeEnd === ''  && this.refs.offTimeEnd) {
+            this.refs.offTimeEnd.value = '';
+        }
         var showCheckIn = this.props.showCheckIn ? (
             <div>
                 <div style={style.wrapper}>
@@ -43,6 +56,7 @@ class DialogContent extends Component {
                     <input style={style.input}
                            type='time'
                            name='checkInTime' 
+                           ref='checkInTime'
                            value={ props.checkInTime ? props.checkInTime.slice(0, 8) : null }
                            onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
                 </div>
@@ -51,6 +65,7 @@ class DialogContent extends Component {
                     <input style={style.input}
                            type='time' 
                            name='checkOutTime'
+                           ref='checkOutTime'
                            value={ props.checkOutTime ? props.checkOutTime.slice(0, 8) : null }
                            onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
                 </div>
@@ -90,6 +105,7 @@ class DialogContent extends Component {
                            type='time' 
                            value={ props.offTimeStart }
                            name='offTimeStart'
+                           ref='offTimeStart'
                            disabled={ !props.offType ? true : false }
                            onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
                 </div>
@@ -99,12 +115,13 @@ class DialogContent extends Component {
                            type='time' 
                            value={ props.offTimeEnd }
                            name='offTimeEnd'
+                           ref='offTimeEnd'
                            disabled={ !props.offType ? true : false }
                            onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
                 </div>
                 <div style={style.wrapper}>
                     <span style={style.label}>請假原因:</span>
-                    <textarea style={ !props.offType ? {...style.input, ...style.disabled } : style.input }
+                    <textarea style={ !props.offType ? {...style.textarea, ...style.disabled } : style.textarea }
                               value={ props.offReason }
                               name='offReason'
                               disabled={ !props.offType ? true : false }
@@ -126,6 +143,20 @@ class DialogContent extends Component {
                 </select>
             </div>
         ) : null;
+        var showBtn = this.props.showBtn ? (
+            <div>
+                <button className='btn_date btn_date_group btn_default'
+                        disabled={ disabledConfirmBtn }
+                        style={ disabledConfirmBtn ? style.disabled : null }
+                        onClick={ () => this.props.onSubmitReport() }>確認</button>
+                <button className='btn_date btn_date_group btn_danger'
+                        style={ props.recordId ? null : style.disabled }
+                        disabled={ props.recordId ? false : true }
+                        onClick={ () => this.props.onDeleteReport() }>刪除紀錄</button>
+                <button className='btn_date btn_date_group btn_info'
+                        onClick={ () => this.props.onDialogClose() }>取消</button>
+            </div>
+        ) : null;
         return (
             <div className='selectReport'>
                 <div style={ style.title }>{ props.userName }</div>
@@ -136,18 +167,7 @@ class DialogContent extends Component {
                 { showGeo }
                 { showOff }
                 { showStatus }
-                <div>
-                    <button className='btn_date btn_date_group btn_default'
-                            disabled={ disabledConfirmBtn }
-                            style={ disabledConfirmBtn ? style.disabled : null }
-                            onClick={ () => this.props.onSubmitReport() }>確認</button>
-                    <button className='btn_date btn_date_group btn_danger'
-                            style={ props.recordId ? null : style.disabled }
-                            disabled={ props.recordId ? false : true }
-                            onClick={ () => this.props.onDeleteReport() }>刪除紀錄</button>
-                    <button className='btn_date btn_date_group btn_info'
-                            onClick={ () => this.props.onDialogClose() }>取消</button>
-                </div>
+                { showBtn }
             </div>
         );
     }

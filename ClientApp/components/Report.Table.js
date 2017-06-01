@@ -4,7 +4,7 @@ import moment from 'moment';
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
 import { getOptions } from './ManageAccount';
-import { actionCreators } from '../store/reportStore';
+import { actionCreators, getDateOptions } from '../store/reportStore';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.min.css';
 import { DateInput } from './DayOff';
@@ -120,7 +120,7 @@ class Table extends Component {
                 Cell: props => {
                     return (
                     <span>
-                        { val[props.index].offType ? props.value : null }
+                        { val[props.index] ? val[props.index].offType ? props.value : null : null }
                     </span>);
                 }
             });
@@ -184,7 +184,17 @@ class Table extends Component {
                             rowsText= '筆'
                             noDataText='無資料!'/>
                 <div style={{width: '150px', margin: '0 auto', marginTop: '16px'}}>
-                    <button className='btn_date btn_default' onClick={ () => this.props.query() }>匯出</button>
+                    <button className='btn_date btn_default' onClick={ () => { 
+                        var id = props.all ? '' : props.id,
+                            options = props.options,
+                            fromDate = props.dateOptions === '-1' ?
+                                       props.fromDate.format('YYYY-MM-DD') : 
+                                       getDateOptions(props.dateOptions),
+                            toDate = props.dateOptions === '-1' ?
+                                     props.toDate.format('YYYY-MM-DD') : 
+                                     new moment().format('YYYY-MM-DD');
+                        window.open(`/api/record/exportXLSX?a=${id}&b=${options}&c=${fromDate}&d=${toDate}`,'_blank')
+                    } }>匯出</button>
                 </div>
                 <Dialog title={'修改資料!'} 
                             visible={ props.showDialog } 
@@ -196,6 +206,7 @@ class Table extends Component {
                                        showGeo={ this.props.showGeo }
                                        showOff={ this.props.showOff }
                                        showStatus={ this.props.showStatus }
+                                       showBtn={ this.props.showBtn }
                                        onInputChange={ this.props.onInputChange }
                                        onSubmitReport={ this.props.onSubmitReport }
                                        onDeleteReport={ this.props.onDeleteReport }

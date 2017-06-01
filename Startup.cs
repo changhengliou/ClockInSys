@@ -35,7 +35,7 @@ namespace ReactSpa
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<ConnectionInfo>(Configuration.GetSection("ConnectionStrings"));
-           
+            
             services.AddDbContext<AppDbContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("LocalSQLServer")));
 
@@ -114,7 +114,7 @@ namespace ReactSpa
 
     public static class InitDatabaseHelper
     {
-        private static readonly string[] Roles = new string[] { "admin", "manager" };
+        private static readonly string[] Roles = new string[] { "admin", "manager", "default" };
 
         public static async Task SeedRoles(IServiceProvider serviceProvider)
         {

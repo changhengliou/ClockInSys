@@ -415,6 +415,34 @@ namespace ReactSpa.Data
                 await dbContext.SaveChangesAsync();
             }
         }
+
+        public async Task<List<AbsenceModel>> GetMonthlyOffRecordAsync(string y, string m)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                var year = Int32.Parse(y);
+                var month = Int32.Parse(m);
+                DateTime fromTime = new DateTime(year, month, 1);
+                DateTime toTime = new DateTime(year, month + 1, 1).AddSeconds(-1);
+                var data = await (from record in dbContext.CheckRecord
+                    join user in dbContext.UserInfo on record.UserId equals user.Id
+                    where record.CheckedDate >= fromTime && record.CheckedDate <= toTime &&
+                          !string.IsNullOrWhiteSpace(record.OffType) &&
+                          record.StatusOfApproval != StatusOfApprovalEnum.REJECTED()
+                    select new AbsenceModel
+                    {
+                        UserName = user.UserName,
+                        CheckedDate = record.CheckedDate.ToString("yyyy-MM-dd"),
+                        OffType = record.OffType,
+                        OffTimeStart = record.OffTimeStart.ToString(),
+                        OffTimeEnd = record.OffTimeEnd.ToString(),
+                        OffReason = record.OffReason,
+                        StatusOfApproval = record.StatusOfApproval
+                    }).ToListAsync();
+
+                return data;
+            }
+        }
     }
 
     public class ApplyOffModel
@@ -430,6 +458,17 @@ namespace ReactSpa.Data
         public DateTime? OffEndDate { get; set; }
 
         public string OffReason { get; set; }
+    }
+
+    public class AbsenceModel
+    {
+        public string UserName { get; set; }
+        public string CheckedDate { get; set; }
+        public string OffType { get; set; }
+        public string OffTimeStart { get; set; }
+        public string OffTimeEnd { get; set; }
+        public string OffReason { get; set; }
+        public string StatusOfApproval { get; set; }
     }
 
     public class OffRecordModel

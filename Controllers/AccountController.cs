@@ -103,7 +103,8 @@ namespace ReactSpa.Controllers
                     var claimResult = await _userManager.AddClaimsAsync(userInfo,
                         new Claim[]
                             {new Claim(ClaimTypes.Email, userInfo.Email), new Claim(ClaimTypes.Name, userInfo.UserName)});
-                    if (claimResult.Succeeded)
+                    var addRoleResult = await _userManager.AddToRoleAsync(userInfo, "default");
+                    if (claimResult.Succeeded && addRoleResult.Succeeded)
                     {
                         var signInReault = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
                             info.ProviderKey,
