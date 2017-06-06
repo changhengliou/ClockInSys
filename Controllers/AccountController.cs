@@ -124,7 +124,7 @@ namespace ReactSpa.Controllers
                 Email = email,
                 UserName = info.Principal.FindFirstValue(ClaimTypes.Name)
             };
-            var registerResult = await _userManager.CreateAsync(user);
+            var registerResult = await _userInfoManager.CreateUserAsync(user);
             if (registerResult.Succeeded)
             {
                 var loginInfoResult = await _userManager.AddLoginAsync(user, info);
@@ -133,7 +133,8 @@ namespace ReactSpa.Controllers
                     var claimResult = await _userManager.AddClaimsAsync(user,
                         new Claim[]
                             {new Claim(ClaimTypes.Email, user.Email), new Claim(ClaimTypes.Name, user.UserName)});
-                    if (claimResult.Succeeded)
+                    var addRoleResult = await _userManager.AddToRoleAsync(user, "default");
+                    if (claimResult.Succeeded && addRoleResult.Succeeded)
                     {
                         var signInReault = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
                             info.ProviderKey,

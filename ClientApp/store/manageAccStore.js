@@ -4,6 +4,7 @@ import { browserHistory } from 'react-router';
 import moment from 'moment';
 
 const initState = {
+    isEmailValid: true,
     isLoading: false,
     choosedOpt: null,
     showContent: false,
@@ -160,6 +161,30 @@ export const actionCreators = {
     },
     onSupervisorChange: (value) => (dispatch, getState) => {
         dispatch({ type: 'ON_SUPERVISOR_CHANGE', payload: { Supervisor: value } });
+    },
+    onValidEmail: (id) => (dispatch, getState) => {
+        var val = getState().manageAccount.UserEmail;
+        let fetchTask = fetch('api/account/isEmailValid', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({
+                id: id,
+                param: val
+            })
+        }).then(response => response.json()).then(data => {
+            if (data.status) {
+                dispatch({ type: 'EMAIL_IS_VALID', payload: { isEmailValid: true } });
+            } else {
+                dispatch({ type: 'EMAIL_IS_INVALID', payload: { isEmailValid: false } });
+            }
+        }).catch(error => {
+            dispatch({ type: 'EMAIL_IS_INVALID', payload: { isEmailValid: false } });
+        });
+        addTask(fetchTask);
     }
 };
 
@@ -183,6 +208,8 @@ export const reducer = (state = initState, action) => {
         case 'ON_AUTH_CHANGE':
         case 'ON_DEPUTY_CHANGE':
         case 'ON_SUPERVISOR_CHANGE':
+        case 'EMAIL_IS_VALID':
+        case 'EMAIL_IS_INVALID':
             return _data;
         case 'REQUEST_USER_INFO_FAILED':
         case 'REQUEST_DELETE_ACCOUNT_FAILED':

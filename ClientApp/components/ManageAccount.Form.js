@@ -9,7 +9,11 @@ import { DateInput } from './DayOff';
 import moment from 'moment';
 import '../css/manageAccount.css';
 import { getOptions } from './ManageAccount';
+import { style } from './Report.Dialog';
 
+const _style = {
+    btn: {width: '40%', margin: '1% 5%', color: '#fff'}
+}
 class ManageForm extends Component {
     constructor(props){
         super(props);
@@ -63,6 +67,8 @@ class ManageForm extends Component {
                     <input type="email"
                            name='UserEmail'
                            className='form_input'
+                           style={ this.props.data.isEmailValid ? null : { borderColor: 'red' } }
+                           onBlur={ () => this.props.onValidEmail(this.props.data) }
                            value={ this.props.data.UserEmail }
                            onChange={ this.props.onTextChange }/>
                 </div>
@@ -121,12 +127,17 @@ class ManageForm extends Component {
                 </div>
                 <div>
                     <button className='btn_date btn_info'
-                            style={{width: '40%', margin: '1% 5%', color: '#fff'}}
+                            style={
+                                this.props.data.isEmailValid ?
+                                _style.btn :
+                                { ..._style.btn, ...style.disabled }
+                            }
+                            disabled={ !this.props.data.isEmailValid }
                             onClick={ () => { this.props.onUpdateClick(this.props.data) }}>
                         確認
                     </button>
                     <button className='btn_date btn_danger' 
-                            style={{width: '40%',  margin: '1% 5%', color: '#fff'}}
+                            style={ _style.btn }
                             onClick={ () => { this.props.onCancelUpdate() } }>
                         返回
                     </button>
@@ -146,17 +157,9 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(actionCreators.onAuthChange(e.value));
         },
         onDeputyChange: (e) => {
-            // var arr = [];
-            // e.map((i) => {
-            //     arr.push(i.value);
-            // });
             dispatch(actionCreators.onDeputyChange(e));
         },
         onSupervisorChange: (e) => {
-            // var arr = [];
-            // e.map((i) => {
-            //     arr.push(i.value);
-            // });
             dispatch(actionCreators.onSupervisorChange(e));
         },
         onTextChange: (e) => {
@@ -176,6 +179,12 @@ const mapDispatchToProps = (dispatch) => {
         },
         onCancelUpdate: () => {
             dispatch(actionCreators.onCancelUpdate());
+        },
+        onValidEmail: (props) => {
+            if (props.choosedOpt)
+                    dispatch(actionCreators.onValidEmail(props.choosedOpt.value));
+                else
+                    dispatch(actionCreators.onValidEmail());
         }
     };
 }

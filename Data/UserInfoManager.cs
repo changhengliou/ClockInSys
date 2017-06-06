@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ReactSpa.Controllers;
+using ReactSpa.Utils;
 
 namespace ReactSpa.Data
 {
@@ -18,6 +23,26 @@ namespace ReactSpa.Data
         {
             ConnectionInfo config = configuration.Value;
             builder.UseSqlServer(config.LocalSQLServer); // changed when azure published
+        }
+
+        public async Task<IdentityResult> CreateUserAsync(UserInfo user)
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+                if (!Utilities.IsValidEmail(user.Email))
+                    return IdentityResult.Failed(new IdentityErrorDescriber().InvalidEmail(user.Email));
+
+                var result = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Email == user.Email);
+                if (result != null)
+                    return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateEmail(result.Email));
+
+                user.ConcurrencyStamp = Guid.NewGuid().ToString();
+                user.SecurityStamp = Guid.NewGuid().ToString();
+                dbContext.Entry(user).State = EntityState.Added;
+                await dbContext.SaveChangesAsync();
+                return IdentityResult.Success;
+            }
         }
 
         public async Task<UserInfo> FindUserByEmailAsync(string email)
@@ -208,17 +233,21 @@ namespace ReactSpa.Data
             }
         }
 
-        private class UserQueryModel
+        public async Task<bool> IsEmailValid(string id, string email)
         {
-            public string UserName { get; set; }
-            public decimal AnnualLeaves { get; set; }
-            public DateTime? DateOfEmployment { get; set; }
-            public string DeputyName { get; set; }
-            public string UserEmail { get; set; }
-            public decimal FamilyCareLeaves { get; set; }
-            public string JobTitle { get; set; }
-            public decimal SickLeaves { get; set; }
-            public string UserPhone { get; set; }
+            if (Utilities.IsValidEmail(email))
+            {
+                using (var dbContext = new AppDbContext(builder.Options))
+                {
+                    var result = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Email == email);
+                    if (result == null)
+                        return true;
+                    if (result.Id == id)
+                        return true;
+                    return false;
+                }
+            }
+            return false;
         }
     }
 
@@ -237,7 +266,7 @@ namespace ReactSpa.Data
         {
             unchecked
             {
-                int hash = (int)2166136261;
+                int hash = (int) 2166136261;
                 hash = (hash * 16777619) ^ Value.GetHashCode();
                 hash = (hash * 16777619) ^ Label.GetHashCode();
                 return hash;

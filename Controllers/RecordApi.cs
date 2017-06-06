@@ -113,6 +113,7 @@ namespace ReactSpa.Controllers
             return Json(new {payload = result});
         }
 
+        /**Get self Notification status*/
         [HttpPost]
         public async Task<ActionResult> GetSelfNotifiedState()
         {
@@ -126,7 +127,7 @@ namespace ReactSpa.Controllers
             var result = await _recordManager.SetStatusOfApprovalAsync(m.RecordId, m.Status);
             if (result)
             {
-                List<NotificationModel> resultModel = await _recordManager.GetNotificationByIdAsync(
+                List<NotificationModel> resultModel = await _recordManager.GetNotificationAsync(
                     User.FindFirstValue(ClaimTypes.NameIdentifier));
                 return Json(new {payload = resultModel});
             }
@@ -234,11 +235,11 @@ namespace ReactSpa.Controllers
                     return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 }
             }
-            catch (ArgumentNullException e)
+            catch (ArgumentNullException)
             {
                 return BadRequest("Invalid parameters.");
             }
-            catch (FormatException e)
+            catch (FormatException)
             {
                 return BadRequest("Invalid parameters.");
             }

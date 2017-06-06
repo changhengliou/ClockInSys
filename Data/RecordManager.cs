@@ -161,11 +161,19 @@ namespace ReactSpa.Data
         {
             using (var dbContext = new AppDbContext(builder.Options))
             {
+                dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
                 var result =
                     await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.UserId == id && s.CheckedDate == date);
                 if (result == null)
                     return false;
-                if (result.CheckInTime == null)
+                if (result.StatusOfApproval == StatusOfApprovalEnum.APPROVED())
+                {
+                    var user = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Id == result.UserId);
+                    user = TypeEnum.CalcLeaves(user, result.OffTimeStart, result.OffTimeEnd,
+                        result.OffType, inverseOp: true);
+                    dbContext.Entry(user).State = EntityState.Modified;
+                }
+                if (result.CheckInTime == null && result.CheckOutTime == null)
                 {
                     dbContext.Entry(result).State = EntityState.Deleted;
                 }
@@ -279,7 +287,7 @@ namespace ReactSpa.Data
             {
                 var dateBound = DateTime.Today.AddDays(range);
                 var result = await dbContext.CheckRecord
-                    .Where(s => !string.IsNullOrWhiteSpace(s.OffType) && s.CheckedDate > dateBound)
+                    .Where(s => !string.IsNullOrWhiteSpace(s.OffType) && s.CheckedDate > dateBound && s.UserId == id)
                     .Select(s => new NotificationModel
                     {
                         CheckedDate = s.CheckedDate.ToString("yyyy-MM-dd"),
@@ -298,10 +306,29 @@ namespace ReactSpa.Data
             {
                 try
                 {
+                    dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
                     var record = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.Id == recordId);
                     if (record == null)
                         return false;
-                    record.StatusOfApproval = status;
+                    if (status == StatusOfApprovalEnum.APPROVED())
+                    {
+                        var user = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Id == record.UserId);
+                        user = TypeEnum.CalcLeaves(user, record.OffTimeStart, record.OffTimeEnd, record.OffType);
+                        if (user == null)
+                        {
+                            record.StatusOfApproval = StatusOfApprovalEnum.REJECTED();
+                        }
+                        else
+                        {
+                            dbContext.Entry(user).State = EntityState.Modified;
+                            record.StatusOfApproval = status;
+                        }
+                    }
+                    else
+                    {
+                        record.StatusOfApproval = status;
+                    }
+                    dbContext.Entry(record).State = EntityState.Modified;
                     await dbContext.SaveChangesAsync();
                     return true;
                 }
@@ -366,8 +393,18 @@ namespace ReactSpa.Data
             using (var dbContext = new AppDbContext(builder.Options))
             {
                 dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+                bool isNewRecordNeedCalc = TypeEnum.LimitedLeaves.Contains(model.OffType) &&
+                                           model.StatusOfApproval == StatusOfApprovalEnum.APPROVED();
                 if (string.IsNullOrWhiteSpace(model.RecordId))
                 {
+                    if (isNewRecordNeedCalc)
+                    {
+                        var user = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Id == model.UserId);
+                        user = TypeEnum.CalcLeaves(user, model.OffTimeStart, model.OffTimeEnd, model.OffType);
+                        if (user == null)
+                            return;
+                        dbContext.Entry(user).State = EntityState.Modified;
+                    }
                     var r = new CheckRecord
                     {
                         UserId = model.UserId,
@@ -389,6 +426,37 @@ namespace ReactSpa.Data
                     var record = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.Id == model.RecordId);
                     if (record != null)
                     {
+                        bool isOldRecordNeedCalc = TypeEnum.LimitedLeaves.Contains(record.OffType) &&
+                                                   record.StatusOfApproval == StatusOfApprovalEnum.APPROVED();
+                        if (isOldRecordNeedCalc || isNewRecordNeedCalc)
+                        {
+                            // new data is special, and approved -
+                            var user = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Id == record.UserId);
+                            if (user == null)
+                                return;
+                            if (isNewRecordNeedCalc)
+                            {
+                                var newCalc = TypeEnum.CalcLeaves(user, model.OffTimeStart, model.OffTimeEnd,
+                                    model.OffType);
+                                if (newCalc != null)
+                                {
+                                    user = newCalc;
+                                    dbContext.Entry(user).State = EntityState.Modified;
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                            }
+                            // old data is special and approved +
+                            if (isOldRecordNeedCalc)
+                            {
+                                user = TypeEnum.CalcLeaves(user, record.OffTimeStart, record.OffTimeEnd, record.OffType,
+                                    inverseOp: true);
+                                dbContext.Entry(user).State = EntityState.Modified;
+                            }
+                        }
+
                         record.CheckInTime = model.CheckInTime;
                         record.CheckOutTime = model.CheckOutTime;
                         record.GeoLocation1 = model.GeoLocation1;
@@ -409,9 +477,20 @@ namespace ReactSpa.Data
         {
             using (var dbContext = new AppDbContext(builder.Options))
             {
-                var obj = new CheckRecord {Id = recordId};
-                dbContext.CheckRecord.Attach(obj);
-                dbContext.Entry(obj).State = EntityState.Deleted;
+                var record = await dbContext.CheckRecord.FirstOrDefaultAsync(s => s.Id == recordId);
+                if (record == null)
+                    return;
+                if (TypeEnum.LimitedLeaves.Contains(record.OffType) &&
+                    record.StatusOfApproval == StatusOfApprovalEnum.APPROVED())
+                {
+                    var user = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Id == record.UserId);
+                    if (user == null)
+                        return;
+                    user = TypeEnum.CalcLeaves(user, record.OffTimeStart, record.OffTimeEnd, record.OffType,
+                        inverseOp: true);
+                    dbContext.Entry(user).State = EntityState.Modified;
+                }
+                dbContext.Entry(record).State = EntityState.Deleted;
                 await dbContext.SaveChangesAsync();
             }
         }

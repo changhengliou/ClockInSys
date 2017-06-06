@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using OfficeOpenXml.Drawing.Chart;
+using OfficeOpenXml.FormulaParsing;
 
 namespace ReactSpa.Data
 {
@@ -39,7 +41,8 @@ namespace ReactSpa.Data
 
             builder.Entity<UserInfo>().Property(s => s.UserName);
             builder.Entity<UserInfo>().HasIndex(s => s.Email).IsUnique();
-            builder.Entity<UserInfo>().Property(s => s.AnnualLeaves).HasColumnType("decimal(5, 2)").HasDefaultValue("0");
+            builder.Entity<UserInfo>().Property(s => s.AnnualLeaves).HasColumnType("decimal(5, 2)")
+                .HasDefaultValue("0");
             builder.Entity<UserInfo>()
                 .Property(s => s.FamilyCareLeaves)
                 .HasColumnType("decimal(5, 2)")
@@ -267,54 +270,80 @@ namespace ReactSpa.Data
 
     public class TypeEnum
     {
-        public static string CHECK_IN()
+        public static List<string> LimitedLeaves = new List<string>
         {
-            return "打卡";
-        }
+            SICK_LEAVE,
+            ANNUAL_LEAVE,
+            FAMILY_CARE_LEAVE
+        };
 
-        public static string PERSONAL_LEAVE()
-        {
-            return "事假";
-        }
+        public static string CHECK_IN => "打卡";
+        public static string PERSONAL_LEAVE => "事假";
+        public static string SICK_LEAVE => "病假";
+        public static string FUNERAL_LEAVE => "喪假";
+        public static string OFFICIAL_LEAVE => "公假";
+        public static string MARRIAGE_LEAVE => "婚假";
+        public static string FAMILY_CARE_LEAVE => "家庭照顧假";
+        public static string MATERNITY_LEAVE => "陪產假";
+        public static string COMPENSATORY_LEAVE => "補休";
+        public static string ANNUAL_LEAVE => "特休";
 
-        public static string SICK_LEAVE()
+        public static UserInfo CalcLeaves(UserInfo user, TimeSpan? start, TimeSpan? after, string type,
+            bool inverseOp = false)
         {
-            return "病假";
-        }
+            if (!LimitedLeaves.Contains(type))
+                return user;
+            if (user == null)
+                throw new Exception("User can't be null");
+            if (start == null || after == null)
+                throw new Exception("Invalid Input TimeSpan");
+            var calc = after.Value.Ticks - start.Value.Ticks;
+            if (calc <= 0)
+                throw new Exception("Invalid Time, beginning is later than ending time");
+            var result = new TimeSpan(calc).TotalHours;
+            if (result > 8)
+                result = 1;
+            else
+                result /= 8;
 
-        public static string FUNERAL_LEAVE()
-        {
-            return "喪假";
-        }
-
-        public static string OFFICIAL_LEAVE()
-        {
-            return "公假";
-        }
-
-        public static string MARRIAGE_LEAVE()
-        {
-            return "婚假";
-        }
-
-        public static string FAMILY_CARE_LEAVE()
-        {
-            return "家庭照顧假";
-        }
-
-        public static string MATERNITY_LEAVE()
-        {
-            return "陪產假";
-        }
-
-        public static string COMPENSATORY_LEAVE()
-        {
-            return "補休";
-        }
-
-        public static string ANNUAL_LEAVE()
-        {
-            return "特休";
+            double days;
+            switch (type)
+            {
+                case "病假":
+                    days = Convert.ToDouble(user.SickLeaves);
+                    if (inverseOp)
+                    {
+                        user.SickLeaves = Convert.ToDecimal(days + result);
+                        break;
+                    }
+                    if (days - result < 0)
+                        return null;
+                    user.SickLeaves = Convert.ToDecimal(days - result);
+                    break;
+                case "特休":
+                    days = Convert.ToDouble(user.AnnualLeaves);
+                    if (inverseOp)
+                    {
+                        user.AnnualLeaves = Convert.ToDecimal(days + result);
+                        break;
+                    }
+                    if (days - result < 0)
+                        return null;
+                    user.AnnualLeaves = Convert.ToDecimal(days - result);
+                    break;
+                case "家庭照顧假":
+                    days = Convert.ToDouble(user.FamilyCareLeaves);
+                    if (inverseOp)
+                    {
+                        user.FamilyCareLeaves = Convert.ToDecimal(days + result);
+                        break;
+                    }
+                    if (days - result < 0)
+                        return null;
+                    user.FamilyCareLeaves = Convert.ToDecimal(days - result);
+                    break;
+            }
+            return user;
         }
     }
 }

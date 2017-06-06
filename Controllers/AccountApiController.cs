@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -110,9 +111,9 @@ namespace ReactSpa.Controllers
                 JobTitle = model.JobTitle,
                 AnnualLeaves = model.AnnualLeaves,
                 SickLeaves = model.SickLeaves,
-                FamilyCareLeaves = model.FamilyCareLeaves,
+                FamilyCareLeaves = model.FamilyCareLeaves
             };
-            var result = await _userManager.CreateAsync(user);
+            var result = await _userInfoManager.CreateUserAsync(user);
 
             if (result.Succeeded)
             {
@@ -121,9 +122,9 @@ namespace ReactSpa.Controllers
                 if (deputyResult && supervisorResult)
                 {
                     var roleResult = await _userManager.AddToRoleAsync(user, model.Authority);
-                    if(roleResult.Succeeded)
-                        return Json(new { status = true });
-                }  
+                    if (roleResult.Succeeded)
+                        return Json(new {status = true});
+                }
             }
             return Json(new {status = false});
         }
@@ -142,8 +143,8 @@ namespace ReactSpa.Controllers
                 return Json(new {status = true});
             var removeRoleResult = await _userManager.RemoveFromRoleAsync(user, role);
             var addRoleResult = await _userManager.AddToRoleAsync(user, model.Authority);
-            if(removeRoleResult.Succeeded && addRoleResult.Succeeded)
-                return Json(new { status = true });
+            if (removeRoleResult.Succeeded && addRoleResult.Succeeded)
+                return Json(new {status = true});
             return Json(new {status = false});
         }
 
@@ -158,6 +159,13 @@ namespace ReactSpa.Controllers
                     return Json(new {status = true});
             }
             return Json(new {status = false});
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> IsEmailValid([FromBody] ValidModel model)
+        {
+            var result = await _userInfoManager.IsEmailValid(model.Id, model.Param);
+            return Json(new {status = result});
         }
 
         public class UserModel
@@ -194,6 +202,12 @@ namespace ReactSpa.Controllers
         public class DeleteUserModel
         {
             public string Id { get; set; }
+        }
+
+        public class ValidModel
+        {
+            public string Id { get; set; }
+            public string Param { get; set; }
         }
     }
 }

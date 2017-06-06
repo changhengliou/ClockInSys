@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +15,7 @@ using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using ReactSpa.Data;
 
@@ -35,13 +39,34 @@ namespace ReactSpa
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<ConnectionInfo>(Configuration.GetSection("ConnectionStrings"));
-            
+
             services.AddDbContext<AppDbContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("LocalSQLServer")));
 
-            services.AddIdentity<UserInfo, IdentityRole>()
-                .AddEntityFrameworkStores<AppDbContext>()
-                .AddDefaultTokenProviders();
+            IdentityBuilder builder = new IdentityBuilder(typeof(UserInfo), typeof(IdentityRole), services);
+
+            services.AddAuthentication((Action<SharedAuthenticationOptions>) (
+                options => options.SignInScheme = new IdentityCookieOptions()
+                    .ExternalCookieAuthenticationScheme));
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.TryAddSingleton<IdentityMarkerService>();
+            services.TryAddSingleton<IUserValidator<UserInfo>,AppUserValidator<UserInfo>>();
+            services.TryAddScoped<IPasswordValidator<UserInfo>, PasswordValidator<UserInfo>>();
+            services.TryAddScoped<IPasswordHasher<UserInfo>, PasswordHasher<UserInfo>>();
+            services.TryAddScoped<ILookupNormalizer, UpperInvariantLookupNormalizer>();
+            services.TryAddScoped<IRoleValidator<IdentityRole>, RoleValidator<IdentityRole>>();
+            services.TryAddScoped<IdentityErrorDescriber>();
+            services.TryAddScoped<ISecurityStampValidator, SecurityStampValidator<UserInfo>>();
+            services.TryAddScoped<IUserClaimsPrincipalFactory<UserInfo>,
+                UserClaimsPrincipalFactory<UserInfo, IdentityRole>>();
+            services.TryAddScoped<UserManager<UserInfo>, UserManager<UserInfo>>();
+            services.TryAddScoped<SignInManager<UserInfo>, SignInManager<UserInfo>>();
+            services.TryAddScoped<RoleManager<IdentityRole>, RoleManager<IdentityRole>>();
+            builder.AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+
+//            services.AddIdentity<UserInfo, IdentityRole>()
+//                .AddEntityFrameworkStores<AppDbContext>()
+//                .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -52,7 +77,8 @@ namespace ReactSpa
             });
 
             // Add framework services.
-            services.AddMvc(options => {
+            services.AddMvc(options =>
+            {
                 options.SslPort = 44305;
                 options.Filters.Add(new RequireHttpsAttribute());
             });
@@ -63,7 +89,7 @@ namespace ReactSpa
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
-            
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -82,6 +108,11 @@ namespace ReactSpa
             app.UseStaticFiles();
 
             app.UseIdentity();
+
+//            app.UseForwardedHeaders(new ForwardedHeadersOptions
+//            {
+//                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+//            });
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
@@ -114,7 +145,7 @@ namespace ReactSpa
 
     public static class InitDatabaseHelper
     {
-        private static readonly string[] Roles = new string[] { "admin", "manager", "default" };
+        private static readonly string[] Roles = new string[] {"admin", "manager", "default"};
 
         public static async Task SeedRoles(IServiceProvider serviceProvider)
         {
