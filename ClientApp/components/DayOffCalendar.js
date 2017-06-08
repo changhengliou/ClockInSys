@@ -35,6 +35,38 @@ class DayOffCalendar extends Component {
     
     render() {
         var props = this.props.data;
+        var off = (<DayOff disableToDate={ false }
+                           disableOffType={ false } 
+                           disableFromTime={ false } 
+                           disableToTime={ false } 
+                           disableOffReason={ false }
+                           disableConfirmBtn={ false }
+                           isBtnCancel={ false }/>);
+        if (props.disabledContent === 'partial') {
+            off.props.disableToDate = true;
+            off.props.disableOffType = false;
+            off.props.disableFromTime = false;
+            off.props.disableToTime = false;
+            off.props.disableOffReason = false;
+            off.props.disableConfirmBtn = false;
+            off.props.isBtnCancel= true;
+        } else if (props.disabledContent === 'all') {
+            off.props.disableToDate = true;
+            off.props.disableOffType = true;
+            off.props.disableFromTime = true;
+            off.props.disableToTime = true;
+            off.props.disableOffReason = true;
+            off.props.disableConfirmBtn = true;
+            off.props.isBtnCancel = false;
+        } else {
+            off.props.disableToDate = false;
+            off.props.disableOffType = false;
+            off.props.disableFromTime = false;
+            off.props.disableToTime = false;
+            off.props.disableOffReason = false;
+            off.props.disableConfirmBtn = false;
+            off.props.isBtnCancel= false;
+        }
         return (
             <div style={{height: '500px', width: '92%', margin: '0 auto'}}>
                 <div className='div_dot'>
@@ -66,7 +98,7 @@ class DayOffCalendar extends Component {
                         animation="zoom"
                         maskAnimation="fade"
                         style={{ top: '6%' }}>
-                    <DayOff/>
+                    { off }
                 </Dialog>
                 <Dialog title='請稍後' 
                         className='rc-dialog-dayoff-header'
@@ -92,7 +124,7 @@ const mapDispatchToProps = (dispatch) => {
         },
         onDialogOpen: (e, isContent = false) => {
             var time = e.start ? new moment(e.start) : new moment(e.checkedDate, 'YYYY-MM-DD');
-            time.set({hour: 12, minute: 0});
+            time.set({hour: 9, minute: 0});
             if(new moment().isAfter(time)){
                 if (isContent) {
                     dispatch(actionCreators.onDialogOpen(e, 'disabled')); // show past record, disabled all

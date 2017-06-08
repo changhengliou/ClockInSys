@@ -6,6 +6,7 @@ import { actionCreators } from '../store/dayoffStore';
 import 'react-datepicker/dist/react-datepicker.min.css';
 import '../css/manageAccount.css';
 import '../css/dayoff.css';
+import OffOption from './DayOff.Options';
 
 export class DateInput extends Component {
     render() {
@@ -33,6 +34,7 @@ const style = {
     disabled : { backgroundColor: '#ccc', borderColor: '#bbb' }
 };
 
+// this.props.disableToDate, disableOffType, disableFromTime, disableToTime, disableOffReason
 class DayOff extends Component {
     constructor(props) {
         super(props);
@@ -60,13 +62,13 @@ class DayOff extends Component {
         var isToday = false,
             diffDate = false,
             props = this.props.data,
-            timeDiff = props.toTime - props.fromTime,
+            timeDiff = (props.toTime - props.fromTime) / 8,
             fromDate = new moment(props.fromDate, 'YYYY-MM-DD'),
             toDate = new moment(props.toDate, 'YYYY-MM-DD'),
             disabledDate = props.disabledContent !== 'none' ? true : false,
-            disabledAll = props.disabledContent === 'all' ? true : false,
-            disabledPartial = props.disabledContent === 'partial';
-
+            disableToDate = this.props.disableToDate;
+        if (timeDiff > 1)
+            timeDiff = 1;
         if (props.fromDate !== props.toDate) {
             diffDate = true;
         } else {
@@ -89,9 +91,9 @@ class DayOff extends Component {
                     <div className="dialog_row">
                         <label className="mps_content_label" style={style.label}>(迄)時間:</label>
                         <DatePicker id="to" selectsEnd dropdownMode="select"
-                        showMonthDropdown disabled={ disabledDate || this.props.disableToDate }
+                        showMonthDropdown disabled={ disableToDate }
                         minDate={ fromDate }
-                        customInput={<DateInput disabledDate/>} 
+                        customInput={<DateInput disableToDate/>} 
                         onChange={ (e) => { this.props.onDateChange(e) } }
                         selected={ toDate } 
                         startDate={ fromDate }
@@ -99,33 +101,23 @@ class DayOff extends Component {
                     </div>
                     <div className="dialog_row">
                         <label className="mps_content_label" style={style.label}>種類:</label>
-                        <select id="offType" 
-                                className="dayOffInput"
-                                disabled={ disabledAll } 
-                                style={ disabledAll ? { ...style.type, ... style.disabled} : style.type }
-                                value={ props.offType }
-                                onChange={ (e) => this.props.onOffTypeChange(e.target.value) }>
-                            <option value="事假">事假</option>
-                            <option value="病假">病假</option>
-                            <option value="喪假">喪假</option>
-                            <option value="公假">公假</option>
-                            <option value="特休">特休</option>
-                            <option value="家庭照顧假">家庭照顧假</option>
-                            <option value="補休">補休</option>
-                            <option value="婚假">婚假</option>
-                            <option value="陪產假">陪產假</option>
-                            <option value="其他">其他</option>
-                        </select>
+                        <OffOption className='dayOffInput'
+                                   disabledAll={ this.props.disableOffType }
+                                   value={ props.offType }
+                                   sickLeaves={ props.s }
+                                   annualLeaves={ props.a }
+                                   familyCareLeaves={ props.f }
+                                   onChange={ (e) => this.props.onOffTypeChange(e.target.value) }/>
                     </div>
                     <div className="dialog_row">
                         <label className="mps_content_label" style={style.label}>期間:
-                            <font style={{color: 'red', marginLeft: '10px'}}>{ timeDiff ? `${timeDiff}小時` : '無效的時間'}</font>
+                            <font style={{color: 'red', marginLeft: '10px'}}>{ timeDiff ? `${timeDiff}天` : '無效的時間'}</font>
                         </label>
                         <div>
-                            <select name="fromTime" className="dayOffInput" disabled={diffDate}
+                            <select name="fromTime" className="dayOffInput" disabled={ diffDate || this.props.disableFromTime }
                                     value={ props.fromTime }
-                                    style={ disabledAll || diffDate ? { ...style.select, ...style.disabled } : style.select } 
-                                    disabled={ disabledAll || diffDate }
+                                    style={ this.props.disableFromTime || diffDate ? { ...style.select, ...style.disabled } : style.select } 
+                                    disabled={ this.props.disableFromTime || diffDate }
                                     onChange={ (e) => this.props.onTimeChange(e.target.name, e.target.value) }>
                                 {
                                     diffDate ? <option value='9'>9:00</option> : 
@@ -134,11 +126,11 @@ class DayOff extends Component {
                                                })
                                 }
                             </select>
-                            <label style={{fontSize: '20px', color: '#4a4a4a', width: '14%', textAlign: 'center'}}>至</label>
+                            <label style={{fontSize: '20px', color: '#4a4a4a', width: '14%', textAlign: 'center', display: 'inline-block'}}>至</label>
                             <select name="toTime" className="dayOffInput" 
                                     value={ props.toTime }
-                                    style={ diffDate || disabledAll ? { ...style.select, ...style.disabled } : style.select } 
-                                    disabled={ disabledAll || diffDate }
+                                    style={ diffDate || this.props.disableToTime ? { ...style.select, ...style.disabled } : style.select } 
+                                    disabled={ this.props.disableToTime || diffDate }
                                     onChange={ (e) => this.props.onTimeChange(e.target.name, e.target.value) }>
                                 {
                                     diffDate ? <option value='18'>18:00</option> : 
@@ -153,24 +145,24 @@ class DayOff extends Component {
                         <label className="mps_content_label" style={style.label}>請假事由:</label>
                         <textarea id="offReason" 
                                   maxLength="100"
-                                  disabled={ disabledAll }
+                                  disabled={ this.props.disableOffReason }
                                   value={ props.offReason }
                                   onChange={ (e) => this.props.onOffReasonChange(e.target.value) }
-                                  style={ disabledAll ? { ...style.textarea, ...style.disabled } : style.textarea }
+                                  style={ this.props.disableOffReason ? { ...style.textarea, ...style.disabled } : style.textarea }
                                   className="dayOffInput"></textarea>
                     </div>
                     <div className="dialog_row">
-                        <button className="btn-2-group btn_date btn_info" disabled={ !timeDiff || disabledAll ? true : false }
-                                style={ !timeDiff || disabledAll ? style.disabled : null }
+                        <button className="btn-2-group btn_date btn_info" disabled={ !timeDiff || this.props.disableConfirmBtn ? true : false }
+                                style={ !timeDiff || this.props.disableConfirmBtn ? style.disabled : null }
                                 onClick={ () => { this.props.onDialogConfirm() } }>{ disabledDate ? '修改' : '確認' }</button>
-                        <button className={ disabledPartial ? 'btn_delete btn-2-group btn_date' : 'btn_trans_blue btn-2-group btn_date'}
+                        <button className={ this.props.isBtnCancel ? 'btn_delete btn-2-group btn_date' : 'btn_trans_blue btn-2-group btn_date'}
                                 onClick={ () => {
-                                    if(disabledPartial)
+                                    if(this.props.isBtnCancel)
                                         this.props.onCancelLeaves(props.fromDate)
                                     else
                                         this.props.onDialogClose()
                                 } }>
-                                { disabledPartial ? '取消請假' : '關閉' }
+                                { this.props.isBtnCancel ? '取消請假' : '關閉' }
                         </button>
                     </div>
                 </div>

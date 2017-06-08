@@ -30,7 +30,6 @@ class DialogContent extends Component {
         return !(JSON.stringify(props) === JSON.stringify(next));
     }
     render() {
-        console.log(this.props);
         var props = this.props.data;
         var disabledNormal = !props.offType && !props.checkInTime && !props.checkOutTime ? true : false;
         var disabledOff = !props.offType || 
@@ -97,6 +96,10 @@ class DialogContent extends Component {
                     <span style={style.label}>請假類別:</span>
                     <OffOption value={ props.offType } 
                                style={style.select}
+                               showNoneOption
+                               sickLeaves={ this.props.s }
+                               annualLeaves={ this.props.a }
+                               familyCareLeaves={ this.props.f }
                                onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }/>
                 </div>
                 <div style={style.wrapper}>

@@ -63,10 +63,10 @@ export const actionCreators = {
         addTask(fetchTask);
     },
     showDialog: (index) => (dispatch, getState) => {
-        var date = new moment(getState().notification.selfData[index].checkedDate, 'YYYY-MM-DD');
+        var data = getState().notification.selfData[index];
+        var date = new moment(data.checkedDate, 'YYYY-MM-DD');
         var now = new moment().set({ hour: 9, minute: 0 });
-        console.log(date.format('YYYY-MM-DD'), now.format('YYYY-MM-DD'));
-        if (now.isAfter(date))
+        if (now.isAfter(date) && data.statusOfApproval === '已核准')
             dispatch({ type: 'SHOW_NOTIFY_DIALOG', payload: { showDialog: true, t: -1 } });
         else
             dispatch({ type: 'SHOW_NOTIFY_DIALOG', payload: { showDialog: true, t: index } });

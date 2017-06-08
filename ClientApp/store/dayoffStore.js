@@ -2,6 +2,9 @@ import { fetch, addTask } from 'domain-task';
 import moment from 'moment';
 
 const initState = {
+    a: 0,
+    s: 0,
+    f: 0,
     isLoading: false,
     showDialog: false,
     disabledContent: 'none',
@@ -24,7 +27,16 @@ export const actionCreators = {
                 'Content-Type': 'application/json; charset=UTF-8',
             }
         }).then(response => response.json()).then(data => {
-            dispatch({ type: 'REQUEST_RECORD_INIT_STATE_FINISHED', payload: { isLoading: false, events: data.payload } });
+            dispatch({
+                type: 'REQUEST_RECORD_INIT_STATE_FINISHED',
+                payload: {
+                    isLoading: false,
+                    events: data.payload.events,
+                    a: data.payload.a,
+                    s: data.payload.s,
+                    f: data.payload.f,
+                }
+            });
         }).catch(error => {
             dispatch({ type: 'REQUEST_RECORD_INIT_STATE_FAILED' });
         });
@@ -94,8 +106,14 @@ export const actionCreators = {
         dispatch({ type: 'ON_DIALOG_CLOSE', payload: { showDialog: false, disabledContent: 'none' } });
     },
     onDialogConfirm: () => (dispatch, getState) => {
-        dispatch({ type: 'PROCEED_APPLY_OFF', payload: { showDialog: false, isLoading: true } });
         var state = getState().dayoff;
+        if (state.offType === '病假' && state.s <= 0)
+            return;
+        if (state.offType === '特休' && state.a <= 0)
+            return;
+        if (state.offType === '家庭照顧假' && state.f <= 0)
+            return;
+        dispatch({ type: 'PROCEED_APPLY_OFF', payload: { showDialog: false, isLoading: true } });
         let fetchTask = fetch('api/record/applyDayOff', {
             method: 'POST',
             credentials: 'include',

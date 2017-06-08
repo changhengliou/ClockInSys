@@ -48,11 +48,19 @@ namespace ReactSpa.Controllers
         {
             try
             {
+                var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 List<OffRecordModel> model =
-                    await _recordManager.GetMonthOffRecordsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), y, m);
+                    await _recordManager.GetMonthOffRecordsAsync(id, y, m);
+                UserInfoModel user = await _userInfoManager.GetUserInfoAsync(id);
                 return Json(new
                 {
-                    payload = model
+                    payload = new
+                    {
+                        events = model,
+                        a = user.AnnualLeaves,
+                        s = user.SickLeaves,
+                        f = user.FamilyCareLeaves
+                    }
                 });
             }
             catch (Exception)
@@ -138,7 +146,24 @@ namespace ReactSpa.Controllers
         public async Task<ActionResult> Query([FromBody] QueryModel model)
         {
             var result = await QueryRecord(model);
-            return Json(new {payload = result});
+            UserInfoModel user = new UserInfoModel
+            {
+                AnnualLeaves = 0,
+                SickLeaves = 0,
+                FamilyCareLeaves = 0
+            };
+            if (model.Id != null)
+                user = await _userInfoManager.GetUserInfoAsync(model.Id);
+            return Json(new
+            {
+                payload = new
+                {
+                    model = result,
+                    a = user.AnnualLeaves,
+                    s = user.SickLeaves,
+                    f = user.FamilyCareLeaves
+                }
+            });
         }
 
         [HttpPost]

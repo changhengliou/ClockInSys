@@ -147,6 +147,7 @@ namespace ReactSpa.Data
                         record.OffTimeEnd = model.OffTimeEnd;
                         record.OffReason = model.OffReason;
                         record.OffType = model.OffType;
+                        record.StatusOfApproval = StatusOfApprovalEnum.PENDING();
                         dbContext.Entry(record).State = EntityState.Modified;
                     }
                 }

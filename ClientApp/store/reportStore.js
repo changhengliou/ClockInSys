@@ -2,6 +2,9 @@ import { fetch, addTask } from 'domain-task';
 import moment from 'moment';
 
 const initState = {
+    a: 0,
+    s: 0,
+    f: 0,
     t: -1,
     all: true,
     id: null,
@@ -98,7 +101,17 @@ export const actionCreators = {
                     props.toDate.format('YYYY-MM-DD') : new moment().format('YYYY-MM-DD'),
             })
         }).then(response => response.json()).then(data => {
-            dispatch({ type: 'ON_REPORT_QUERY_FINISHED', payload: { status: 2, data: data.payload, isLoading: false } });
+            dispatch({
+                type: 'ON_REPORT_QUERY_FINISHED',
+                payload: {
+                    status: 2,
+                    data: data.payload.model,
+                    isLoading: false,
+                    a: data.payload.a,
+                    s: data.payload.s,
+                    f: data.payload.f
+                }
+            });
         }).catch(error => {
             dispatch({ type: 'ON_REPORT_QUERY_FAILED', payload: { status: -1 } });
         });
@@ -215,14 +228,23 @@ export const actionCreators = {
             })
         }).then(response => response.json()).then(data => {
             var model;
-            if (data.payload.length)
-                model = data.payload[0];
+            if (data.payload.model.length)
+                model = data.payload.model[0];
             else {
                 model = initState.model;
                 model.checkedDate = getState().report.date;
                 model.userId = getState().report.name;
             }
-            dispatch({ type: 'ON_NEW_RECORD_QUERY_FINISHED', payload: { showDialog: true, model: model } });
+            dispatch({
+                type: 'ON_NEW_RECORD_QUERY_FINISHED',
+                payload: {
+                    showDialog: true,
+                    model: model,
+                    a: data.payload.a,
+                    s: data.payload.s,
+                    f: data.payload.f
+                }
+            });
         }).catch(error => {
             dispatch({ type: 'ON_NEW_RECORD_QUERY_FAILED' });
         });

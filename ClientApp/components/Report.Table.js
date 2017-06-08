@@ -202,7 +202,10 @@ class Table extends Component {
                             animation="zoom"
                             maskAnimation="fade"
                             style={{ top: '6%' }}>
-                        <DialogContent showCheckIn={ this.props.showCheckIn }
+                        <DialogContent s={ props.s }
+                                       a={ props.a }
+                                       f={ props.f }
+                                       showCheckIn={ this.props.showCheckIn }
                                        showGeo={ this.props.showGeo }
                                        showOff={ this.props.showOff }
                                        showStatus={ this.props.showStatus }
