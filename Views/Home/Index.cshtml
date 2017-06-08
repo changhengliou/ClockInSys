@@ -1,11 +1,12 @@
 @using System.Security.Claims
-@{
-    ViewData["Title"] = "Home Page";
-}
-
+@model IList<string>
 <div id="react-app" asp-prerender-module="ClientApp/dist/main-server" style="margin-bottom: 5%;"
-     asp-prerender-data="new {userName = @User.FindFirstValue(ClaimTypes.Name), userEmail = @User.FindFirstValue(ClaimTypes.Email)}">
-    ¸ü¤J¤¤...
+     asp-prerender-data="new {
+                                  userName = @User.FindFirstValue(ClaimTypes.Name), 
+                                  userEmail = @User.FindFirstValue(ClaimTypes.Email),
+                                  roles = @Model
+                             }">
+    è¼‰å…¥ä¸­...
 </div>
 
 @section scripts {

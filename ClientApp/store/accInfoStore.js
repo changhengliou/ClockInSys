@@ -2,6 +2,7 @@ import { Action, Reducer } from 'redux';
 import { fetch, addTask } from 'domain-task';
 
 export const initState = {
+    roles: [],
     loadingCompleted: false,
     userName: null,
     userEmail: null,

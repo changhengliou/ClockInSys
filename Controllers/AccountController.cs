@@ -102,7 +102,9 @@ namespace ReactSpa.Controllers
                 {
                     var claimResult = await _userManager.AddClaimsAsync(userInfo,
                         new Claim[]
-                            {new Claim(ClaimTypes.Email, userInfo.Email), new Claim(ClaimTypes.Name, userInfo.UserName)});
+                        {
+                            new Claim(ClaimTypes.Email, userInfo.Email), new Claim(ClaimTypes.Name, userInfo.UserName)
+                        });
                     var addRoleResult = await _userManager.AddToRoleAsync(userInfo, "default");
                     if (claimResult.Succeeded && addRoleResult.Succeeded)
                     {
@@ -118,33 +120,7 @@ namespace ReactSpa.Controllers
             // If the user does not have an account, then create an account for user.
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["LoginProvider"] = info.LoginProvider;
-
-            var user = new UserInfo
-            {
-                Email = email,
-                UserName = info.Principal.FindFirstValue(ClaimTypes.Name)
-            };
-            var registerResult = await _userInfoManager.CreateUserAsync(user);
-            if (registerResult.Succeeded)
-            {
-                var loginInfoResult = await _userManager.AddLoginAsync(user, info);
-                if (loginInfoResult.Succeeded)
-                {
-                    var claimResult = await _userManager.AddClaimsAsync(user,
-                        new Claim[]
-                            {new Claim(ClaimTypes.Email, user.Email), new Claim(ClaimTypes.Name, user.UserName)});
-                    var addRoleResult = await _userManager.AddToRoleAsync(user, "default");
-                    if (claimResult.Succeeded && addRoleResult.Succeeded)
-                    {
-                        var signInReault = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
-                            info.ProviderKey,
-                            isPersistent: false);
-                        if (signInReault.Succeeded)
-                            return RedirectToAction("Index", "Home");
-                    }
-                }
-            }
-            return RedirectToAction(nameof(Login));
+            return View("NoAccount", email);
         }
 
         public async Task<ActionResult> SignOut()

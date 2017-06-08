@@ -21,27 +21,19 @@ namespace ReactSpa.Controllers
     public class AccountApiController : Controller
     {
         private readonly UserManager<UserInfo> _userManager;
-        private readonly SignInManager<UserInfo> _signInManager;
-        private readonly ILogger _logger;
-        private readonly string _externalCookieScheme;
         private readonly UserInfoManager _userInfoManager;
 
         public AccountApiController(
             UserManager<UserInfo> userManager,
-            SignInManager<UserInfo> signInManager,
-            IOptions<IdentityCookieOptions> identityCookieOptions,
-            ILoggerFactory loggerFactory,
             IOptions<ConnectionInfo> config)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
-            _externalCookieScheme = identityCookieOptions.Value.ExternalCookieAuthenticationScheme;
-            _logger = loggerFactory.CreateLogger<AccountApiController>();
             _userInfoManager = new UserInfoManager(config);
         }
 
-        /** Bug here, lack of functionality of [Deputy], [Supervisor] */
-
+        //
+        // get initial state at '/accountInfo'
+        // POST: /api/account/GetInitState
         [HttpPost]
         public async Task<ActionResult> GetInitState()
         {
@@ -52,9 +44,11 @@ namespace ReactSpa.Controllers
             return Json(new {payload = userList});
         }
 
-        /** Bug here, lack of functionality of [Role] */
-
+        //
+        // get user data at '/manageaccount'
+        // POST: /api/account/getUserInfo
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> GetUserInfo([FromBody] DeleteUserModel model)
         {
             var user = await _userManager.FindByIdAsync(model.Id);
@@ -86,16 +80,22 @@ namespace ReactSpa.Controllers
             });
         }
 
+        //
+        // search for name and id by typing key words at '/report', '/manageaccount'
+        // POST: /api/account/getNameList
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> GetNameList([FromBody] SearchNameListModel model)
         {
             var nameList = await _userInfoManager.SearchUserNameAsync(model.Param);
             return Json(new {payload = nameList});
         }
 
-        /** Bug here, lack of functionality of [Authority] */
-
+        // 
+        // create a new user at '/manageaccount'
+        // POST: /api/account/CreateUser
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> CreateUser([FromBody] UserModel model)
         {
             if (!ModelState.IsValid)
@@ -129,9 +129,12 @@ namespace ReactSpa.Controllers
             return Json(new {status = false});
         }
 
-        /** Bug here, lack of functionality of [Authority] */
 
+        // 
+        // update an existed user data at '/manageaccount'
+        // POST: /api/account/updateUser
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> UpdateUser([FromBody] UserModel model)
         {
             if (!ModelState.IsValid)
@@ -148,7 +151,11 @@ namespace ReactSpa.Controllers
             return Json(new {status = false});
         }
 
+        // 
+        // delete an existed user at '/manageaccount'
+        // POST: /api/account/deleteUser
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> DeleteUser([FromBody] DeleteUserModel model)
         {
             if (model.Id != User.FindFirstValue(ClaimTypes.NameIdentifier))
@@ -161,7 +168,11 @@ namespace ReactSpa.Controllers
             return Json(new {status = false});
         }
 
+        // 
+        // check if email is unique and valid at '/manageaccount'
+        // POST: /api/account/isEmailValid
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> IsEmailValid([FromBody] ValidModel model)
         {
             var result = await _userInfoManager.IsEmailValid(model.Id, model.Param);

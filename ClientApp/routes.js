@@ -16,10 +16,13 @@ export const UrlMapping = {
     '/dayOff': '請假申請',
     '/notification': '審核/通知',
     '/absent': '缺席狀態',
-    '/manageaccount': '帳號管理',
     '/accountinfo': '帳戶資訊',
-    '/report': '綜合報告'
 };
+
+export const ProtectedUrlMapping = {
+    '/manageaccount': '帳號管理',
+    '/report': '綜合報告'
+}
 
 export default (
     <Route component={ Layout }>

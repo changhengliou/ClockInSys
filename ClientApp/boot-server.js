@@ -4,7 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { match, RouterContext } from 'react-router';
 import createMemoryHistory from 'history/lib/createMemoryHistory';
 import { createServerRenderer, RenderResult } from 'aspnet-prerendering';
-import routes from './routes';
+import routes, { ProtectedUrlMapping } from './routes';
 import configureStore from './configureStore';
 
 export default createServerRenderer(params => {
@@ -27,6 +27,11 @@ export default createServerRenderer(params => {
                 throw new Error(`The location '${ params.url }' doesn't match any route configured in react-router.`);
             }
 
+            if (params.data.roles[0] === 'default') {
+                if (ProtectedUrlMapping[params.url]) {
+                    throw new Error(`Access denied.`);
+                }
+            }
             // Build an instance of the application
             const app = (
                 <Provider store={ store }>

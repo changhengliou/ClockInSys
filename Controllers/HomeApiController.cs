@@ -21,7 +21,9 @@ namespace ReactSpa.Controllers
             _recordManager = new RecordManager(config);
         }
 
-
+        //
+        // Fetch init data for checkIn at '/'
+        // POST: /api/home/getInitState
         [HttpPost]
         public async Task<ActionResult> GetInitState()
         {
@@ -79,6 +81,9 @@ namespace ReactSpa.Controllers
             });
         }
 
+        //
+        // checkIn '/'
+        // POST: /api/home/proceedCheckIn
         [HttpPost]
         public async Task<ActionResult> ProceedCheckIn([FromBody] CheckingModel model)
         {
@@ -94,6 +99,9 @@ namespace ReactSpa.Controllers
             return Json(new {status = false, payload = new {}});
         }
 
+        //
+        // checkOut '/'
+        // POST: /api/home/proceedCheckOut
         [HttpPost]
         public async Task<ActionResult> ProceedCheckOut([FromBody] CheckingModel model)
         {

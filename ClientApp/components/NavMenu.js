@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
-import { UrlMapping } from '../routes';
+import { UrlMapping, ProtectedUrlMapping } from '../routes';
 import { connect } from 'react-redux';
 import { actionCreators } from '../store/index';
 class NavMenu extends React.Component {
@@ -20,6 +20,9 @@ class NavMenu extends React.Component {
 
     render() {
         var info = this.props.info;
+        var protectedUrl = ProtectedUrlMapping;
+        if (info.roles[0] === 'default')
+            protectedUrl = {};
         return (
             <div>
                 <div id="mySidenav" className="mps_left_nav" style={{ width: this.props.style }}>
@@ -41,6 +44,15 @@ class NavMenu extends React.Component {
                                     );
                                 })
                             }
+                            {
+                                Object.keys(protectedUrl).map((obj, index) => {
+                                    return (
+                                        <li onClick={this.closeNav} key={index}>
+                                            <Link to={obj}>{protectedUrl[obj]}</Link>
+                                        </li>
+                                    );
+                                })
+                            }
                         </ul>
                         <button onClick={this.closeNav} className="btn_logout">
                             <a href='/account/signout'>登出</a>
@@ -58,6 +70,15 @@ class NavMenu extends React.Component {
                                 return (
                                     <span className="nav_top_right_function" key={index}>
                                         <Link to={obj}>{UrlMapping[obj]}</Link>
+                                    </span>
+                                );
+                            })
+                        }
+                        {
+                            Object.keys(protectedUrl).map((obj, index) => {
+                                return (
+                                    <span className="nav_top_right_function" key={ index * -1 }>
+                                        <Link to={obj}>{protectedUrl[obj]}</Link>
                                     </span>
                                 );
                             })

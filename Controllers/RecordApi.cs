@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -43,6 +44,9 @@ namespace ReactSpa.Controllers
             _recordManager = new RecordManager(config);
         }
 
+        //
+        // Fetch user leave records for display at '/dayOff'
+        // GET: /api/record/getInitState
         [HttpGet]
         public async Task<ActionResult> GetInitState(int y, int m)
         {
@@ -69,6 +73,9 @@ namespace ReactSpa.Controllers
             }
         }
 
+        //
+        // apply new leave at '/dayOff'
+        // POST: /api/record/applyDayOff
         [HttpPost]
         public async Task<ActionResult> ApplyDayOff([FromBody] OffRecordModel model)
         {
@@ -82,6 +89,9 @@ namespace ReactSpa.Controllers
             });
         }
 
+        //
+        // cancel leave apply at '/dayOff', '/notification'
+        // GET: /api/record/cancelDayOff
         [HttpGet]
         public async Task<ActionResult> CancelDayOff(string d)
         {
@@ -111,8 +121,9 @@ namespace ReactSpa.Controllers
             });
         }
 
-        /**bug options: showall for role, show deputy and show supervisor */
-        /**bug options: set display date range */
+        //
+        // get pending inquiries at '/notification'
+        // POST: /api/record/getInitNotifiedState
         [HttpPost]
         public async Task<ActionResult> GetInitNotifiedState()
         {
@@ -121,7 +132,9 @@ namespace ReactSpa.Controllers
             return Json(new {payload = result});
         }
 
-        /**Get self Notification status*/
+        //
+        // get self application records at '/notification'
+        // POST: /api/record/getSelfNotifiedState
         [HttpPost]
         public async Task<ActionResult> GetSelfNotifiedState()
         {
@@ -129,6 +142,9 @@ namespace ReactSpa.Controllers
             return Json(new {payload = result});
         }
 
+        //
+        // set notification status at '/notification'
+        // POST: /api/record/setNotification
         [HttpPost]
         public async Task<ActionResult> SetNotification([FromBody] SetNotificationModel m)
         {
@@ -142,7 +158,11 @@ namespace ReactSpa.Controllers
             return Json(new {payload = new List<NotificationModel>(), status = false});
         }
 
+        //
+        // query all records by time and id at '/report'
+        // POST: /api/record/query
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> Query([FromBody] QueryModel model)
         {
             var result = await QueryRecord(model);
@@ -166,7 +186,11 @@ namespace ReactSpa.Controllers
             });
         }
 
+        //
+        // insert or update record at '/report'
+        // POST: /api/record/editRecord
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> EditRecord([FromBody] EditRecordModel model)
         {
             if (!ModelState.IsValid)
@@ -183,7 +207,11 @@ namespace ReactSpa.Controllers
             return Json(new {payload = result, model});
         }
 
+        //
+        // drop record at '/report'
+        // POST: /api/record/deleteRecord
         [HttpPost]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> DeleteRecord([FromBody] QueryModel model)
         {
             await _recordManager.DeleteRecordByRecordIdAsync(model.RecordId);
@@ -191,6 +219,9 @@ namespace ReactSpa.Controllers
             return Json(new {payload = result});
         }
 
+        //
+        // This is not an open API!
+        // function use by /api/record/deleteRecord and /api/record/editRecord
         public async Task<List<ReportModel>> QueryRecord(QueryModel model)
         {
             var options = RecordOptions.SelectAll;
@@ -203,7 +234,11 @@ namespace ReactSpa.Controllers
             return await _recordManager.GetRecordsAsync(model.Id, model.FromDate, model.ToDate, options);
         }
 
+        //
+        // export query result and export as excel XLSX file at '/report'
+        // GET: /api/record/exportXlsx
         [HttpGet]
+        [Authorize(Roles = "manager, admin")]
         public async Task<ActionResult> ExportXlsx(string a, string b, string c, string d)
         {
             try
@@ -270,6 +305,9 @@ namespace ReactSpa.Controllers
             }
         }
 
+        //
+        // get init absent records from everyone for display at '/absent'
+        // GET: /api/record/getAbsentStatus
         [HttpGet]
         public async Task<ActionResult> GetAbsentStatus(string y, string m)
         {
