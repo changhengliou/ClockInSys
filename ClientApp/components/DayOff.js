@@ -67,7 +67,7 @@ class DayOff extends Component {
             disabledAll = props.disabledContent === 'all' ? true : false,
             disabledPartial = props.disabledContent === 'partial';
 
-        if(props.fromDate !== props.toDate) {
+        if (props.fromDate !== props.toDate) {
             diffDate = true;
         } else {
             if (new moment(props.fromDate, 'YYYY-MM-DD').isSame(new moment(), 'days'))
@@ -89,7 +89,7 @@ class DayOff extends Component {
                     <div className="dialog_row">
                         <label className="mps_content_label" style={style.label}>(迄)時間:</label>
                         <DatePicker id="to" selectsEnd dropdownMode="select"
-                        showMonthDropdown disabled={ disabledDate }
+                        showMonthDropdown disabled={ disabledDate || this.props.disableToDate }
                         minDate={ fromDate }
                         customInput={<DateInput disabledDate/>} 
                         onChange={ (e) => { this.props.onDateChange(e) } }

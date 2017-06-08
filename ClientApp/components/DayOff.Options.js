@@ -20,11 +20,11 @@ class OffOption extends Component {
                 onChange={ this.props.onChange }>
                 <option value="">無</option>
                 <option value="事假" disabled={ this.props.disabled1 }>事假</option>
-                <option value="病假" disabled={ this.props.disabled2 }>病假</option>
+                <option value="病假" disabled={ this.props.disabled2 }>病假 (剩餘 { this.props.sickLeave }天)</option>
                 <option value="喪假" disabled={ this.props.disabled3 }>喪假</option>
                 <option value="公假" disabled={ this.props.disabled4 }>公假</option>
-                <option value="特休" disabled={ this.props.disabled5 }>特休</option>
-                <option value="家庭照顧假" disabled={ this.props.disabled6 }>家庭照顧假</option>
+                <option value="特休" disabled={ this.props.disabled5 }>特休 (剩餘 { this.props.annualLeaves }天)</option>
+                <option value="家庭照顧假" disabled={ this.props.disabled6 }>家庭照顧假 (剩餘 { this.props.familyCareLeaves }天)</option>
                 <option value="補休" disabled={ this.props.disabled7 }>補休</option>
                 <option value="婚假" disabled={ this.props.disabled8 }>婚假</option>
                 <option value="陪產假" disabled={ this.props.disabled9 }>陪產假</option>

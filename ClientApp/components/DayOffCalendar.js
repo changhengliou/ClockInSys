@@ -37,7 +37,18 @@ class DayOffCalendar extends Component {
         var props = this.props.data;
         return (
             <div style={{height: '500px', width: '92%', margin: '0 auto'}}>
+                <div className='div_dot'>
+                    <div className='dot red_dot'></div>
+                    <span className='label_dot'>審核中</span>
+                    <div className='dot blue_dot'></div>
+                    <span className='label_dot'>已核准</span>
+                </div>
                 <BigCalendar
+                    eventPropGetter={ (obj, start, end, isSelected) => {
+                        if (obj.statusOfApproval === '審核中')
+                            return { style: { backgroundColor: 'red'} }
+                        return { style: null };
+                    } }
                     selectable={ true }
                     onSelectSlot={ this.onSelectSlot }
                     onSelectEvent={ (info) => this.props.onDialogOpen(info, true) }
