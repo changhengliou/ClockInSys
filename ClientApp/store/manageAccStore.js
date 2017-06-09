@@ -23,6 +23,30 @@ const initState = {
     Authority: 'default'
 }
 
+export const getNumOfLeave = (date) => {
+    var today = new moment().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    var diff = today.diff(date, 'months');
+    switch (true) {
+        case (diff >= 6 && diff < 12): // 0.5 - 1, 3days
+            return 3;
+        case diff >= 12 && diff < 24: // 1 - 2, 7 days
+            return 7;
+        case diff >= 24 && diff < 36: // 2 - 3, 10 days
+            return 10;
+        case diff >= 36 && diff < 60: // 3 - 5, 14 days
+            return 14;
+        case diff >= 60 && diff < 120: // 5 - 10, 15 days
+            return 15;
+        case diff >= 120: // at 10, 16 days
+            var result = 15 + parseInt((diff - 108) / 12);
+            if (result > 30)
+                return 30;
+            return result;
+        default:
+            console.log('--------')
+            return 0;
+    }
+}
 export const actionCreators = {
     handleChange: (value) => (dispatch, getState) => {
         dispatch({ type: 'OPTION_CHANGE', payload: { choosedOpt: value, showErrorMsg: false } });
@@ -151,7 +175,7 @@ export const actionCreators = {
         dispatch({ type: 'ON_TEXT_CHANGE', payload: obj });
     },
     onDateChange: (date) => (dispatch, getState) => {
-        dispatch({ type: 'ON_DATE_CHANGE', payload: { DateOfEmployment: date } });
+        dispatch({ type: 'ON_DATE_CHANGE', payload: { DateOfEmployment: date, AnnualLeaves: getNumOfLeave(date) } });
     },
     onAuthChange: (value) => (dispatch, getState) => {
         dispatch({ type: 'ON_AUTH_CHANGE', payload: { Authority: value } });
