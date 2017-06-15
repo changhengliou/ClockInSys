@@ -94,6 +94,9 @@ class Table extends Component {
         }
         if (this.props.showOff) {
             columns.push({
+                Header: '請假申請日期',
+                accessor: 'offApplyDate',
+            }, {
                 Header: '請假類別',
                 accessor: 'offType',
             }, {

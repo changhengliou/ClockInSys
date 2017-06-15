@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using ReactSpa.Controllers;
-using ReactSpa.Data;
 
 namespace ReactSpa.Data
 {
@@ -109,7 +106,6 @@ namespace ReactSpa.Data
             }
         }
 
-        /** bug notify supervisor, deputy, role */
 
         public async Task<bool> AddLeaveAsync(string id, OffRecordModel model)
         {
@@ -136,7 +132,8 @@ namespace ReactSpa.Data
                             OffType = model.OffType,
                             OffReason = model.OffReason,
                             OffTimeStart = model.OffTimeStart,
-                            OffTimeEnd = model.OffTimeEnd
+                            OffTimeEnd = model.OffTimeEnd,
+                            OffApplyDate = DateTime.Today
                         });
                     }
                     else
@@ -148,6 +145,7 @@ namespace ReactSpa.Data
                         record.OffReason = model.OffReason;
                         record.OffType = model.OffType;
                         record.StatusOfApproval = StatusOfApprovalEnum.PENDING();
+                        record.OffApplyDate = DateTime.Today;
                         dbContext.Entry(record).State = EntityState.Modified;
                     }
                 }
@@ -180,6 +178,7 @@ namespace ReactSpa.Data
                 }
                 else
                 {
+                    result.OffApplyDate = null;
                     result.OffTimeStart = null;
                     result.OffTimeEnd = null;
                     result.OffEndDate = null;
@@ -365,6 +364,9 @@ namespace ReactSpa.Data
                         CheckOutTime = record.CheckOutTime.ToString(),
                         GeoLocation1 = record.GeoLocation1,
                         GeoLocation2 = record.GeoLocation2,
+                        OffApplyDate = record.OffApplyDate.Value == null
+                            ? ""
+                            : record.OffApplyDate.Value.ToString("yyyy-MM-dd"),
                         OffReason = record.OffReason,
                         OffTimeStart = record.OffTimeStart.ToString(),
                         OffTimeEnd = record.OffTimeEnd.ToString(),
@@ -418,7 +420,8 @@ namespace ReactSpa.Data
                         OffTimeStart = model.OffTimeStart,
                         OffTimeEnd = model.OffTimeEnd,
                         OffReason = model.OffReason,
-                        StatusOfApproval = model.StatusOfApproval
+                        StatusOfApproval = model.StatusOfApproval,
+                        OffApplyDate = DateTime.Today
                     };
                     await dbContext.CheckRecord.AddAsync(r);
                 }
@@ -613,6 +616,8 @@ namespace ReactSpa.Data
         public string GeoLocation1 { get; set; }
 
         public string GeoLocation2 { get; set; }
+
+        public string OffApplyDate { get; set; }
 
         public string OffType { get; set; }
 

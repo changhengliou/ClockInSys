@@ -1,6 +1,8 @@
 .disabled {
     opacity: 0.65;
     cursor: not-allowed;
+    border: 1px solid #aaa !important;
+    background: #ccc !important;
 }
 
 .form_in {

@@ -6,15 +6,17 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using ReactSpa.Data;
+using ReactSpa.Utils;
 
 namespace ReactSpa.Controllers
 {
@@ -83,6 +85,7 @@ namespace ReactSpa.Controllers
             List<OffRecordModel> resultModel =
                 await _recordManager.GetMonthOffRecordsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
                     model.CheckedDate.Year, model.CheckedDate.Month);
+            
             return Json(new
             {
                 payload = resultModel
@@ -262,33 +265,36 @@ namespace ReactSpa.Controllers
                         worksheet.Column(x).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     }
                     worksheet.Cells[1, 1].Value = $"{c} - {d} 出勤狀況表";
-                    worksheet.Cells[1, 1, 1, 9].Merge = true;
-                    worksheet.Cells[1, 1, 1, 9].Style.Font.Bold = true;
-                    worksheet.Cells[1, 1, 1, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[1, 1, 1, 10].Merge = true;
+                    worksheet.Cells[1, 1, 1, 10].Style.Font.Bold = true;
+                    worksheet.Cells[1, 1, 1, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     worksheet.Cells[2, 1].Value = "姓名";
                     worksheet.Cells[2, 2].Value = "日期";
                     worksheet.Cells[2, 3].Value = "上班時間";
                     worksheet.Cells[2, 4].Value = "下班時間";
                     worksheet.Cells[2, 5].Value = "上班打卡座標";
                     worksheet.Cells[2, 6].Value = "下班打卡座標";
-                    worksheet.Cells[2, 7].Value = "請假類別";
-                    worksheet.Cells[2, 8].Value = "請假時間";
-                    worksheet.Cells[2, 9].Value = "請假原因";
+                    worksheet.Cells[2, 7].Value = "請假申請日期";
+                    worksheet.Cells[2, 8].Value = "請假類別";
+                    worksheet.Cells[2, 9].Value = "請假時間";
+                    worksheet.Cells[2, 10].Value = "請假原因";
 
                     for (int i = 0; i < result.Count; i++)
                     {
+                        if (result[i].StatusOfApproval == StatusOfApprovalEnum.APPROVED())
+                        {
+                            worksheet.Cells[$"G{i + 3}"].Value = result[i].OffApplyDate;
+                            worksheet.Cells[$"H{i + 3}"].Value = result[i].OffType;
+                            worksheet.Cells[$"I{i + 3}"].Value = $"{result[i].OffTimeStart} - {result[i].OffTimeEnd}";
+                            worksheet.Cells[$"J{i + 3}"].Value = result[i].OffReason;
+                        } else if(string.IsNullOrWhiteSpace(result[i].CheckInTime) && string.IsNullOrWhiteSpace(result[i].CheckOutTime))
+                            continue;
                         worksheet.Cells[$"A{i + 3}"].Value = result[i].UserName;
                         worksheet.Cells[$"B{i + 3}"].Value = result[i].CheckedDate;
                         worksheet.Cells[$"C{i + 3}"].Value = result[i].CheckInTime;
                         worksheet.Cells[$"D{i + 3}"].Value = result[i].CheckOutTime;
                         worksheet.Cells[$"E{i + 3}"].Value = result[i].GeoLocation1;
                         worksheet.Cells[$"F{i + 3}"].Value = result[i].GeoLocation2;
-                        if (result[i].StatusOfApproval == StatusOfApprovalEnum.APPROVED())
-                        {
-                            worksheet.Cells[$"G{i + 3}"].Value = result[i].OffType;
-                            worksheet.Cells[$"H{i + 3}"].Value = $"{result[i].OffTimeStart} - {result[i].OffTimeEnd}";
-                            worksheet.Cells[$"I{i + 3}"].Value = result[i].OffReason;
-                        }
                     }
 
                     byte[] file = pkg.GetAsByteArray();

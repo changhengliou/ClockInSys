@@ -74,7 +74,8 @@ namespace ReactSpa.Data
             builder.Entity<CheckRecord>().Property(s => s.OffTimeEnd).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.GeoLocation1).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.GeoLocation2).IsRequired(false);
-            builder.Entity<CheckRecord>().Property(s => s.Comment).IsRequired(false);
+            builder.Entity<CheckRecord>().Property(s => s.StatusOfApprovalForOvertime).IsRequired(false);
+            builder.Entity<CheckRecord>().Property(s => s.OvertimeEndTime).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.OffEndDate).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.StatusOfApproval).IsRequired(false);
 
@@ -136,6 +137,7 @@ namespace ReactSpa.Data
         private string _Id;
         private DateTime _CheckedDate;
         private string _StatusOfApproval;
+        private string _StatusOfApprovalForOvertime;
 
         [Key]
         public string Id
@@ -193,7 +195,21 @@ namespace ReactSpa.Data
             set { _StatusOfApproval = value; }
         }
 
-        public string Comment { get; set; }
+        [Column(TypeName = "Date")]
+        public DateTime? OffApplyDate { get; set; } // for applicaion Date
+
+        public string OvertimeEndTime { get; set; }
+
+        public string StatusOfApprovalForOvertime
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_StatusOfApprovalForOvertime))
+                    return StatusOfApprovalEnum.PENDING();
+                return _StatusOfApprovalForOvertime;
+            }
+            set => _StatusOfApprovalForOvertime = value;
+        }
 
         public virtual UserInfo UserInfo { get; set; }
     }

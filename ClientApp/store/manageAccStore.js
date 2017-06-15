@@ -27,7 +27,7 @@ export const getNumOfLeave = (date) => {
     var today = new moment().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     var diff = today.diff(date, 'months');
     switch (true) {
-        case (diff >= 6 && diff < 12): // 0.5 - 1, 3days
+        case diff >= 6 && diff < 12: // 0.5 - 1, 3days
             return 3;
         case diff >= 12 && diff < 24: // 1 - 2, 7 days
             return 7;
@@ -43,7 +43,6 @@ export const getNumOfLeave = (date) => {
                 return 30;
             return result;
         default:
-            console.log('--------')
             return 0;
     }
 }

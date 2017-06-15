@@ -4,6 +4,8 @@ import { actionCreators, reducer } from '../store/homeStore';
 import '../css/index.css';
 import moment from 'moment';
 import { Link } from 'react-router';
+import Dialog from 'rc-dialog';
+import 'rc-dialog/assets/index.css';
 
 const style = {
     tr1: { textAlign: 'left', marginLeft: '2em' },
@@ -119,28 +121,45 @@ class Home extends React.Component {
                     <div id='map' style={{height: '100%', width: '100%'}}>請刷新瀏覽器</div>
                 </div>
                 <div className="content_wrapper">
-                    <div className="mps_row">
-                        <button id="checkIn" className={`mps_btn btn_blue ${disabledIn}`} 
+                    <div style={{marginBottom: '14px'}}>
+                        <button id="checkIn" className={`btn_date btn_blue ${disabledIn}`} 
                                 disabled={data.shouldCheckInDisable}
+                                style={{width: '23%', marginRight: '5%', marginLeft: '4%'}}
                                 onClick={() => {this.props.proceedCheck('checkIn');}}>
                                 簽到
                         </button>
-                    </div>
-                    <div className="mps_row">
-                        <button id="checkOut" className={`mps_btn btn_dark_grey ${disabledOut}`}
+                        <button id="checkOut" className={`btn_date btn_blue ${disabledOut}`}
                                 disabled={data.shouldCheckOutDisable}
+                                style={{width: '23%', marginRight: '5%'}}
                                 onClick={() => {this.props.proceedCheck('checkOut');}}>
                                 簽退
                         </button>
                     </div>
-                    <div className="mps_row">
-                        <button id="applyDayOff" className="mps_btn btn_red">
+                    <button id="applyDayOff" 
+                            className="btn_date btn_danger"
+                            style={{width: '23%', marginRight: '5%', marginLeft: '4%'}}>
                             <Link to='/dayOff' style={{color: '#fff', textDecoration: 'none', display: 'block'}}>
                                 請假
                             </Link>
-                        </button>
-                    </div>
+                    </button>
+                    <button id="applyDayOff" 
+                            className="btn_date btn_violet"
+                            style={{width: '23%', marginRight: '5%'}}>
+                            <Link to='/dayOff' style={{color: '#fff', textDecoration: 'none', display: 'block'}}>
+                                加班申請
+                            </Link>
+                    </button>
                 </div>
+                <Dialog title='打卡完成' 
+                        className='rc-dialog-dayoff-header'
+                        visible={ this.props.showDialog } 
+                        style={{ top: '40%', textAlign: 'center'}}
+                        animation="zoom"
+                        maskAnimation="fade"
+                        onClose={ () => this.props.onCloseDialog() }>
+                    <button className='btn_date btn_danger' style={{width: '30%'}}
+                            onClick={ () => this.props.onCloseDialog() }>關閉</button>
+                </Dialog>
                 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCgR4Fmw4SAbpzAwA6mivcy6viFm38OztE"></script>
             </div>
         );
@@ -149,7 +168,8 @@ class Home extends React.Component {
 
 const mapStateToProps = (state) => {
     return {
-        data: state.home.data
+        data: state.home.data,
+        showDialog: state.home.showDialog
     };
 }
 
@@ -163,9 +183,12 @@ const mapDispatchToProps = (dispatch) => {
         },
         proceedCheck: (type) => {
             var position = null;
-            if(typeof window === 'object')
+            if(typeof window === 'object' && window.pos)
                 position = `${window.pos.lat}, ${window.pos.lng}`
             dispatch(actionCreators.proceedCheck(position, type));
+        },
+        onCloseDialog: () => {
+            dispatch(actionCreators.onCloseDialog());
         }
     };
 }

@@ -32,12 +32,36 @@
     color: #fff;
 }
 
+.btn_blue {
+    background: #54c8ff;
+    border-color: #37b6f3;
+    color: #fff;
+}
+
+.btn_blue:active:enabled {
+    background: #31b4f2;
+    border-color: #189ddc;
+    color: #fff;
+}
+
+.btn_violet {
+    background: #dd83fa;
+    border-color: #dc73ff;
+    color: #fff;
+}
+
+.btn_violet:active:enabled {
+    background: #ce5bf3;
+    border-color: #c649f0;
+    color: #fff;
+}
+
 .btn_info {
     background: #95dce4;
     border-color: #4acdf5;
 }
 
-.btn_info:active {
+.btn_info:active:enabled {
     background: #7ecfd9;
     border-color: #30c3f0;
 }
@@ -48,7 +72,7 @@
     border-color: #0a48f7;
 }
 
-.btn_default:active {
+.btn_default:active:enabled {
     background: #1543c4;
     border-color: #0a34aa;
 }
@@ -59,7 +83,7 @@
     border-color: #f80f25;
 }
 
-.btn_danger:active {
+.btn_danger:active:enabled {
     background: #f30a14;
     border-color: #d50303;
 }
@@ -108,7 +132,7 @@ input.form_input {
     border-color: #4acdf5;
 }
 
-.btn_trans_blue:active {
+.btn_trans_blue:active:enabled {
     background: #eee;
     border-color: #55c6e8;
 }

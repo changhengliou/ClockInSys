@@ -97,6 +97,11 @@ class NavMenu extends React.Component {
                             UrlMapping[this.props.pathname] :
                             UrlMapping['/' + this.props.pathname.split('/')[1]]
                         }
+                        { 
+                            protectedUrl[this.props.pathname] ?
+                            protectedUrl[this.props.pathname] :
+                            protectedUrl['/' + this.props.pathname.split('/')[1]]
+                        }
                     </div>
                 </div>
             </div>

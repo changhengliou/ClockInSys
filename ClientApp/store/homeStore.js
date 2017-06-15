@@ -3,6 +3,7 @@ import { fetch, addTask } from 'domain-task';
 import moment from 'moment';
 
 const initState = {
+    showDialog: false,
     status: null,
     data: {
         shouldCheckInDisable: true,
@@ -25,7 +26,7 @@ export const actionCreators = {
                 'Content-Type': 'application/json; charset=UTF-8',
             }
         }).then(response => response.json()).then(data => {
-            dispatch({ type: 'REQUEST_INIT_STATE', payload: data.payload });
+            dispatch({ type: 'REQUEST_INIT_STATE', payload: { data: data.payload } });
         }).catch(error => {
             dispatch({ type: 'REQUEST_INIT_STATE_FAILED', payload: error });
         });
@@ -51,33 +52,39 @@ export const actionCreators = {
                 'Geo': _geo
             })
         }).then(response => response.json()).then(data => {
-            console.log(data);
             if (!data.status)
                 throw new error('Something goes wrong =(');
             else
-                dispatch({ type: 'PROCEED_CHECKING', payload: data.payload });
+                dispatch({ type: 'PROCEED_CHECKING', payload: { data: data.payload, showDialog: true } });
         }).catch(error => {
             dispatch({ type: 'REQUEST_CHECKING_FAILED', payload: error });
         });
         addTask(fetchTask);
+    },
+    onCloseDialog: () => (dispatch, getState) => {
+        dispatch({ type: 'ON_HOME_PAGE_DIALOG_CLOSE', payload: { showDialog: false } })
     }
 };
 
 
 
 export const reducer = (state = initState, action) => {
-    var _data = Object.assign({}, state.data, action.payload);
     switch (action.type) {
         case 'REQUEST_INIT_STATE':
-            return { status: 'SUCCESS', data: _data };
+            return {...state, ...action.payload };
         case 'REQUEST_INIT_STATE_FAILED':
             return { status: 'ERROR', error: action.payload };
         case 'PROCEED_CHECKING':
-            return { status: 'SUCCESS', data: _data };
+            var result = {...state, ...action.payload };
+            result.data = {...state.data, ...action.payload.data }
+            return result;
         case 'REQUEST_CHECKING_FAILED':
             return { status: 'ERROR', error: action.payload };
         case 'TIME_TICKING':
+            var _data = Object.assign({}, state.data, action.payload);
             return Object.assign({}, state, { data: _data });
+        case 'ON_HOME_PAGE_DIALOG_CLOSE':
+            return {...state, ...action.payload };
         default:
             return state;
     }
