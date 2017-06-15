@@ -43,3 +43,28 @@ textarea {
 .react-datepicker__year-select {
     font-size: 1.3rem;
 }
+
+.tabs {
+    border-bottom: 1px solid #199af7;
+    margin: 0 0 10px;
+    padding: 0;
+}
+
+.tabs-list {
+    border-radius: 5px 5px 0 0;
+    position: relative;
+    display: inline-block;
+    padding: 6px 12px;
+    list-style: none;
+    background: #6cc1fd;
+    color: #fff;
+    border-right: 1px #fff solid;
+    box-sizing: border-box;
+}
+
+.tabs-list-active {
+    bottom: -1px;
+    border: 1px #199af7 solid;
+    background: #29a4fa;
+    border-bottom: 1px solid transparent;
+}

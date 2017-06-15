@@ -4,7 +4,10 @@ import moment from 'moment';
 
 const initState = {
     showDialog: false,
+    showOTDialog: false,
     status: null,
+    OTDate: new moment(),
+    OTTime: '19:00',
     data: {
         shouldCheckInDisable: true,
         shouldCheckOutDisable: true,
@@ -62,8 +65,20 @@ export const actionCreators = {
         addTask(fetchTask);
     },
     onCloseDialog: () => (dispatch, getState) => {
-        dispatch({ type: 'ON_HOME_PAGE_DIALOG_CLOSE', payload: { showDialog: false } })
-    }
+        dispatch({ type: 'ON_HOME_PAGE_DIALOG_CLOSE', payload: { showDialog: false } });
+    },
+    onOpenOTDialog: () => (dispatch, getState) => {
+        dispatch({ type: 'ON_HOME_PAGE_OT_DIALOG_OPEN', payload: { showOTDialog: true } });
+    },
+    onCloseOTDialog: () => (dispatch, getState) => {
+        dispatch({ type: 'ON_HOME_PAGE_OT_DIALOG_CLOSE', payload: { showOTDialog: false } })
+    },
+    onOTDateChange: (state) => (dispatch, getState) => {
+        dispatch({ type: 'ON_HOME_PAGE_OT_DATE_CHANGE', payload: { OTDate: state } })
+    },
+    onOTTimeChange: (state) => (dispatch, getState) => {
+        dispatch({ type: 'ON_HOME_PAGE_OT_TIME_CHANGE', payload: { OTTime: state } })
+    },
 };
 
 
@@ -84,6 +99,10 @@ export const reducer = (state = initState, action) => {
             var _data = Object.assign({}, state.data, action.payload);
             return Object.assign({}, state, { data: _data });
         case 'ON_HOME_PAGE_DIALOG_CLOSE':
+        case 'ON_HOME_PAGE_OT_DIALOG_OPEN':
+        case 'ON_HOME_PAGE_OT_DIALOG_CLOSE':
+        case 'ON_HOME_PAGE_OT_DATE_CHANGE':
+        case 'ON_HOME_PAGE_OT_TIME_CHANGE':
             return {...state, ...action.payload };
         default:
             return state;

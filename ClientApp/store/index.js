@@ -5,6 +5,7 @@ import * as DayOff from './dayoffStore';
 import * as Notification from './notificationStore';
 import * as Absent from './absentStore';
 import * as Report from './reportStore';
+import * as Setting from './settingStore';
 
 export const actionCreators = {
     onNavBarOpen: (value) => (dispatch, getState) => {
@@ -33,5 +34,6 @@ export const reducers = {
     manageAccount: ManageAccount.reducer,
     notification: Notification.reducer,
     absent: Absent.reducer,
-    report: Report.reducer
+    report: Report.reducer,
+    setting: Setting.reducer
 };
