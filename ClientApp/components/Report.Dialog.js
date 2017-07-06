@@ -90,6 +90,29 @@ class DialogContent extends Component {
                 </div>
             </div>
         ) : null;
+        var showOT = this.props.showOT ? (
+            <div>
+                <div style={style.wrapper}>
+                    <span style={style.label}>加班時間:</span>
+                    <select style={style.input}
+                           type='text' 
+                           name='overtimeEndTime'
+                           value={ props.overtimeEndTime }
+                           onChange={ (e) => this.props.onInputChange(e.target.value, e.target.name) }>
+                           <option value={null}></option>
+                           <option value='19:30'>19:00-19:30</option>
+                           <option value='20:00'>19:00-20:00</option>
+                           <option value='20:30'>19:00-20:30</option>
+                           <option value='21:00'>19:00-21:00</option>
+                           <option value='21:30'>19:00-21:30</option>
+                           <option value='22:00'>19:00-22:00</option>
+                           <option value='22:30'>19:00-22:30</option>
+                           <option value='23:00'>19:00-23:00</option>
+                           <option value='23:30'>19:00-23:30</option>
+                    </select>
+                </div>
+            </div>
+        ) : null;
         var showOff = this.props.showOff ? (
             <div>
                 <div style={style.wrapper}>
@@ -168,6 +191,7 @@ class DialogContent extends Component {
                 </div>
                 { showCheckIn }
                 { showGeo }
+                { showOT }
                 { showOff }
                 { showStatus }
                 { showBtn }

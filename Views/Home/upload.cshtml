@@ -1,0 +1,60 @@
+﻿@{
+    Layout = null;
+}
+@model IEnumerable<ReactSpa.Controllers.ExcelDto>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+<form method="post" asp-controller="Home" asp-action="Upload" enctype="multipart/form-data">
+    <input name="file" type="file"
+           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+    <input type="submit"/>
+</form>
+@{
+    if (Model != null)
+    {
+        <table id="dataTable">
+            <thead>
+            <tr>
+                <th>日期</th>
+                <th>姓名</th>
+                <th>上班時間</th>
+                <th>下班時間</th>
+                <th>上班打卡座標</th>
+                <th>下班打卡座標</th>
+                <th>加班時間</th>
+                <th>請假申請日期</th>
+                <th>請假類別</th>
+                <th>請假時間</th>
+                <th>請假原因</th>
+            </tr>
+            </thead>
+            <tbody>
+            @{
+                foreach (var s in Model.OrderBy(s => s.UserName))
+                {
+                    <tr>
+                        <td>@s.CheckedDate</td>
+                        <td>@s.UserName</td>
+                        <td>@s.CheckInTime</td>
+                        <td>@s.CheckOutTime</td>
+                        <td>@s.GeoLocation1</td>
+                        <td>@s.GeoLocation2</td>
+                        <td>@s.OvertimeEndTime</td>
+                        <td>@s.OffApplyDate</td>
+                        <td>@s.OffType</td>
+                        <td>@s.OffTime</td>
+                        <td>@s.OffReason</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    }
+}
+</body>
+</html>

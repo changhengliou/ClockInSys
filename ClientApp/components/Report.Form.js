@@ -18,6 +18,10 @@ class Form extends Component {
             label: '出勤', value: '1'
         }, {
             label: '請假', value: '2'
+        }, {
+            label: '加班', value: '3'
+        }, {
+            label: '其他', value: '4'
         }];
         this.dateOptions = [{
             label: `今日 (${getDateOptions('0')})`, value: '0'

@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Annotations;
 using Hangfire.Dashboard;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +15,9 @@ using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using ReactSpa.Data;
+using ReactSpa.Extension;
 
 namespace ReactSpa
 {
@@ -44,26 +43,7 @@ namespace ReactSpa
             services.AddDbContext<AppDbContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("LocalSQLServer")));
 
-            IdentityBuilder builder = new IdentityBuilder(typeof(UserInfo), typeof(IdentityRole), services);
-
-            services.AddAuthentication((Action<SharedAuthenticationOptions>) (
-                options => options.SignInScheme = new IdentityCookieOptions()
-                    .ExternalCookieAuthenticationScheme));
-            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.TryAddSingleton<IdentityMarkerService>();
-            services.TryAddSingleton<IUserValidator<UserInfo>, AppUserValidator<UserInfo>>();
-            services.TryAddScoped<IPasswordValidator<UserInfo>, PasswordValidator<UserInfo>>();
-            services.TryAddScoped<IPasswordHasher<UserInfo>, PasswordHasher<UserInfo>>();
-            services.TryAddScoped<ILookupNormalizer, UpperInvariantLookupNormalizer>();
-            services.TryAddScoped<IRoleValidator<IdentityRole>, RoleValidator<IdentityRole>>();
-            services.TryAddScoped<IdentityErrorDescriber>();
-            services.TryAddScoped<ISecurityStampValidator, SecurityStampValidator<UserInfo>>();
-            services.TryAddScoped<IUserClaimsPrincipalFactory<UserInfo>,
-                UserClaimsPrincipalFactory<UserInfo, IdentityRole>>();
-            services.TryAddScoped<UserManager<UserInfo>, UserManager<UserInfo>>();
-            services.TryAddScoped<SignInManager<UserInfo>, SignInManager<UserInfo>>();
-            services.TryAddScoped<RoleManager<IdentityRole>, RoleManager<IdentityRole>>();
-            builder.AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+            services.AddCustomIdentity<UserInfo, IdentityRole>().AddEfStores<UserInfo, IdentityRole, AppDbContext>();
 
 //            services.AddIdentity<UserInfo, IdentityRole>()
 //                .AddEntityFrameworkStores<AppDbContext>()
@@ -125,8 +105,8 @@ namespace ReactSpa
 
             app.UseGoogleAuthentication(new GoogleOptions
             {
-                ClientId = "864395898535-15osimciv6jhgk62e2u2toq86dbp4sa6.apps.googleusercontent.com",
-                ClientSecret = "-UpYWagYZomhUwpAD4RC3tJ1",
+                ClientId = "801390402609-u1p4juuc8432gaqd0gr80o2i1v5fcbsh.apps.googleusercontent.com",
+                ClientSecret = "-m9m9iP2q0SfDi1AtL_Zx7ku",
                 AuthenticationScheme = "Google",
                 CallbackPath = "/account/callback-google"
             });
@@ -171,11 +151,50 @@ namespace ReactSpa
                     if ((date.Value.Day == today.Day && date.Value.Month == today.Month) ||
                         (date.Value.Day == 29 && date.Value.Month == 2 && today.Day == 28 && today.Month == 2))
                     {
+                        var obj = dbContext.RemainingDayOff.FirstOrDefault(
+                            z => z.UserId == s.Id && z.Year == (today.Year - 1).ToString());
+                        if (obj == null)
+                        {
+                            dbContext.RemainingDayOff.Add(new RemainingDayOff
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                AnnualLeaves = s.AnnualLeaves,
+                                FamilyCareLeaves = 0,
+                                SickLeaves = 0,
+                                UserId = s.Id,
+                                Year = (today.Year - 1).ToString()
+                            });
+                        }
+                        else
+                        {
+                            obj.AnnualLeaves = s.AnnualLeaves;
+                            dbContext.Entry(obj).State = EntityState.Modified;
+                        }
                         s.AnnualLeaves = GetNumberOfAnnualLeaves(s.DateOfEmployment);
                         dbContext.Entry(s).State = EntityState.Modified;
                     }
                     if (today.Day == 1 && today.Month == 1)
                     {
+                        var obj = dbContext.RemainingDayOff.FirstOrDefault(
+                            z => z.UserId == s.Id && z.Year == (today.Year - 1).ToString());
+                        if (obj == null)
+                        {
+                            dbContext.RemainingDayOff.Add(new RemainingDayOff
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                AnnualLeaves = 0,
+                                FamilyCareLeaves = s.FamilyCareLeaves,
+                                SickLeaves = s.SickLeaves,
+                                UserId = s.Id,
+                                Year = (today.Year - 1).ToString()
+                            });
+                        }
+                        else
+                        {
+                            obj.FamilyCareLeaves = s.FamilyCareLeaves;
+                            obj.SickLeaves = s.SickLeaves;
+                            dbContext.Entry(obj).State = EntityState.Modified;
+                        }
                         s.FamilyCareLeaves = 7;
                         s.SickLeaves = 30;
                         dbContext.Entry(s).State = EntityState.Modified;
@@ -215,7 +234,7 @@ namespace ReactSpa
 
     public static class InitDatabaseHelper
     {
-        private static readonly string[] Roles = {"admin", "manager", "default"};
+        private static readonly string[] Roles = {"boss", "admin", "manager", "default", "inactive"};
 
         public static async Task SeedRoles(IServiceProvider serviceProvider)
         {

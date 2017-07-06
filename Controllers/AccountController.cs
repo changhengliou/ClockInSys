@@ -79,10 +79,15 @@ namespace ReactSpa.Controllers
             }
 
             // Sign in the user with this external login provider if the user already has a login.
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
-                isPersistent: false);
-            if (result.Succeeded)
+            var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (user != null)
             {
+                if (await _userManager.IsInRoleAsync(user, "inactive"))
+                {
+                    await _signInManager.SignOutAsync();
+                    return View("InActiveAccount", user);
+                } 
+                await _signInManager.SignInAsync(user, isPersistent: false, authenticationMethod: info.LoginProvider);
                 _logger.LogInformation(5, "User logged in with {Name} provider.", info.LoginProvider);
                 Debug.WriteLine($"auth = {User.Identity.IsAuthenticated}");
                 Debug.WriteLine($"id = {User.FindFirstValue(ClaimTypes.NameIdentifier)}");
@@ -94,7 +99,6 @@ namespace ReactSpa.Controllers
             // if no external login login, but email is already existed, create an external login
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var userInfo = await _userInfoManager.FindUserByEmailAsync(email);
-            Debug.WriteLine($"Email = {email}, UserInfo = {userInfo}");
             if (userInfo != null)
             {
                 var addLoginResult = await _userManager.AddLoginAsync(userInfo, info);
@@ -105,21 +109,20 @@ namespace ReactSpa.Controllers
                         {
                             new Claim(ClaimTypes.Email, userInfo.Email), new Claim(ClaimTypes.Name, userInfo.UserName)
                         });
-                    var addRoleResult = await _userManager.AddToRoleAsync(userInfo, "default");
-                    if (claimResult.Succeeded && addRoleResult.Succeeded)
+                    if (claimResult.Succeeded)
                     {
-                        var signInReault = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
-                            info.ProviderKey,
-                            isPersistent: false);
-                        if (signInReault.Succeeded)
-                            return RedirectToAction("Index", "Home");
+                        if (await _userManager.IsInRoleAsync(userInfo, "inactive"))
+                        {
+                            await _signInManager.SignOutAsync();
+                            return View("InActiveAccount", userInfo);
+                        }
+                        await _signInManager.SignInAsync(userInfo, isPersistent: false,
+                            authenticationMethod: info.LoginProvider);
+                        return RedirectToAction("Index", "Home");
                     }
                 }
                 return RedirectToAction(nameof(Login));
             }
-            // If the user does not have an account, then create an account for user.
-            ViewData["ReturnUrl"] = returnUrl;
-            ViewData["LoginProvider"] = info.LoginProvider;
             return View("NoAccount", email);
         }
 

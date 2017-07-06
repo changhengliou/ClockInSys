@@ -1,10 +1,11 @@
 const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const merge = require('webpack-merge');
 
 module.exports = (env) => {
-    const isDevBuild = !(env && env.prod);
+    const isDevBuild = false; //!(env && env.prod);
 
     // Configuration in common to both client-side and server-side bundles
     const sharedConfig = () => ({
@@ -44,14 +45,6 @@ module.exports = (env) => {
             ]
         },
         plugins: [
-            // new webpack.ContextReplacementPlugin(/^\.\/locale$/, context => {
-            //     if (!/\/moment\//.test(context.context)) { return }
-            //     Object.assign(context, {
-            //         regExp: /^\.\/(zh-tw)/,
-            //         request: '../../locale'
-            //     })
-            // }),
-            // new webpack.IgnorePlugin(/\.\/locale$/),
             new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /zh-tw/),
             new ExtractTextPlugin('site.css'),
         ]
@@ -75,7 +68,11 @@ module.exports = (env) => {
             })
         ] : [
             // Plugins that apply in production builds only
-            new webpack.optimize.UglifyJsPlugin()
+            new webpack.optimize.UglifyJsPlugin(),
+            new OptimizeCssAssetsPlugin({
+                cssProcessor: require('cssnano'),
+                cssProcessorOptions: { discardComments: { removeAll: true } },
+            })
         ])
     });
 

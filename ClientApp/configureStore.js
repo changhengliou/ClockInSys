@@ -2,18 +2,18 @@ import { createStore, applyMiddleware, compose, combineReducers, GenericStoreEnh
 import thunk from 'redux-thunk';
 import { routerReducer } from 'react-router-redux';
 import * as Store from './store';
-import { createLogger } from 'redux-logger';
+// import { createLogger } from 'redux-logger';
 
 export default function configureStore(initialState) {
     // Build middleware. These are functions that can process the actions before they reach the store.
     const windowIfDefined = typeof window === 'undefined' ? null : window;
     // If devTools is installed, connect to it
     const devToolsExtension = windowIfDefined && windowIfDefined.devToolsExtension;
-    const logger = createLogger({
-        predicate: (getState, action) => action.type !== 'TIME_TICKING'
-    });
+    // const logger = createLogger({
+    //     predicate: (getState, action) => action.type !== 'TIME_TICKING'
+    // });
     const createStoreWithMiddleware = compose(
-        applyMiddleware(thunk, logger),
+        applyMiddleware(thunk/*, logger*/),
         devToolsExtension ? devToolsExtension() : f => f
     )(createStore);
 

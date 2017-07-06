@@ -68,11 +68,11 @@ class Table extends Component {
     renderColumn() {
         var val = this.props.data.data;
         var columns = [{
-            Header: '姓名',
-            accessor: 'userName'
-        }, {
             Header: '日期',
             accessor: 'checkedDate'
+        }, {
+            Header: '姓名',
+            accessor: 'userName'
         }];
         if (this.props.showCheckIn) {
             columns.push({
@@ -90,6 +90,15 @@ class Table extends Component {
             }, {
                 Header: '下班打卡座標',
                 accessor: 'geoLocation2',
+            });
+        }
+        if (this.props.showOT) {
+            columns.push({
+                Header: '加班時間',
+                accessor: 'overtimeEndTime',
+                Cell: props => {
+                    return <span>{ props.value ? `19:00 - ${props.value}` : null }</span>
+                }
             });
         }
         if (this.props.showOff) {
@@ -209,6 +218,7 @@ class Table extends Component {
                                        a={ props.a }
                                        f={ props.f }
                                        showCheckIn={ this.props.showCheckIn }
+                                       showOT={ this.props.showOT }
                                        showGeo={ this.props.showGeo }
                                        showOff={ this.props.showOff }
                                        showStatus={ this.props.showStatus }

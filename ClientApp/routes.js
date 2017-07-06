@@ -10,7 +10,8 @@ import AccountInfo from './components/AccountInfo';
 import Notification from './components/Notificaion';
 import AbsenceStatus from './components/AbsenceStatus';
 import Report from './components/Report';
-import Setting from './components/Setting';
+import BulkyUpdate from './components/BulkyUpdate';
+import Result from './components/BulkyUpdate.result';
 
 export const UrlMapping = {
     '/': '打卡',
@@ -23,7 +24,7 @@ export const UrlMapping = {
 export const ProtectedUrlMapping = {
     '/manageaccount': '帳號管理',
     '/report': '綜合報告',
-    'setting': '系統設定'
+    // '/bulkyUpdate': '大量匯入'
 }
 
 export default (
@@ -38,7 +39,10 @@ export default (
         </Route>
         <Route path='/accountinfo' components={{ body: AccountInfo }} />
         <Route path='/report' components={{ body: Report }} />
-        <Route path='/setting' components={{ body: Setting }}/>
+        {/*<Route path='/bulkyUpdate' components={{ body: BulkyUpdate }}/>
+        <Route path='/bulkyUpdate/result' component={{ body: Result }}>
+            <Route path='(:newCount)'/>
+        </Route>*/}
     </Route>
 );
 

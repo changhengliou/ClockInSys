@@ -27,6 +27,7 @@ const initState = {
         geoLocation2: '',
         offType: '',
         offTimeStart: '',
+        overtimeEndTime: '',
         offTimeEnd: '',
         offReason: '',
         statusOfApproval: '審核中',
@@ -59,7 +60,10 @@ export const actionCreators = {
         dispatch({ type: 'ON_NAME_CHANGE', payload: { id: value } });
     },
     onOptionsChanges: (value) => (dispatch, getState) => {
-        dispatch({ type: 'ON_OPT_CHANGE', payload: { options: value } });
+        var payload = { options: value };
+        if (value === '4')
+            payload = { options: value, all: true, dateOptions: '0', id: null };
+        dispatch({ type: 'ON_OPT_CHANGE', payload: payload });
     },
     onAllChanged: () => (dispatch, getState) => {
         var opt = !getState().report.all;
@@ -122,7 +126,27 @@ export const actionCreators = {
     },
     onChangingDataBtnClick: (e) => (dispatch, getState) => {
         var model = {...getState().report.data[e] };
-        dispatch({ type: 'ON_CHANGING_DATA_BTN_CLICK', payload: { showDialog: true, model: model } });
+        var props = getState().report;
+        let fetchTask = fetch(`api/record/query?id=${model.userId}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+        }).then(response => response.json()).then(data => {
+            dispatch({
+                type: 'ON_CHANGING_DATA_BTN_CLICK',
+                payload: {
+                    showDialog: true,
+                    a: data.payload.a,
+                    s: data.payload.s,
+                    f: data.payload.f,
+                    model: model
+                }
+            });
+        });
+        addTask(fetchTask);
     },
     onDialogClose: () => (dispatch, getState) => {
         dispatch({ type: 'ON_CHANGING_DATA_DIALOG_CLOSE', payload: { showDialog: false } });
@@ -156,6 +180,7 @@ export const actionCreators = {
                     data.checkedDate.format('YYYY-MM-DD') : data.checkedDate,
                 checkInTime: data.checkInTime,
                 checkOutTime: data.checkOutTime,
+                overtimeEndTime: data.overtimeEndTime,
                 geoLocation1: data.geoLocation1,
                 geoLocation2: data.geoLocation2,
                 offReason: data.offReason,

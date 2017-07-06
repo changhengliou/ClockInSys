@@ -68,6 +68,22 @@ class ManageAccount extends Component {
                                         this.props.showErrorMsg(props.showErrorMsg) } }>刪除帳號</button>
                     </div>
                     { errorMsg }
+                    <hr/>
+                    <div>
+                        下載
+                        <ul>
+                            <li style={{marginTop: '10px'}}>
+                                <a target="_blank" href="/api/account/getRemainOffExcel">
+                                    員工剩餘特休資訊表
+                                </a>
+                            </li>
+                            <li style={{marginTop: '10px'}}>
+                                <a target="_blank" href="/api/account/getStaffInfoExcel">
+                                    員工資料表
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                     <Dialog title={'警告!'} 
                             visible={ props.showDialog } 
                             onClose={ () => { this.props.onDialogCancel() } }

@@ -46,7 +46,7 @@ namespace ReactSpa.Controllers
                 {
                     shouldCheckInDisable = false;
                 }
-                else if (record.CheckInTime != null && record.CheckOutTime == null)
+                if (record.CheckOutTime == null)
                 {
                     shouldCheckOutDisable = false;
                 }
@@ -74,7 +74,7 @@ namespace ReactSpa.Controllers
                 payload = new
                 {
                     shouldCheckInDisable = false,
-                    shouldCheckOutDisable = true,
+                    shouldCheckOutDisable = false,
                     currentDate = DateTime.Today.ToString("yyyy年MM月dd日 (ddd)"),
                     currentTime = DateTime.Now.ToString("h:mm:ss tt")
                 }
@@ -94,7 +94,11 @@ namespace ReactSpa.Controllers
                         new
                         {
                             status = true,
-                            payload = new {checkIn = result, shouldCheckInDisable = true, shouldCheckOutDisable = false}
+                            payload = new
+                            {
+                                checkIn = result,
+                                shouldCheckInDisable = true
+                            }
                         });
             return Json(new {status = false, payload = new {}});
         }
@@ -112,9 +116,22 @@ namespace ReactSpa.Controllers
                         new
                         {
                             status = true,
-                            payload = new {checkOut = result, shouldCheckInDisable = true, shouldCheckOutDisable = true}
+                            payload = new
+                            {
+                                checkOut = result,
+                                shouldCheckOutDisable = true
+                            }
                         });
             return Json(new {status = false, payload = new {}});
+        }
+
+        //
+        // apply overtime working '/'
+        // GET: /api/home/OTsubmit
+        public async Task<ActionResult> OTsubmit(DateTime d, string t)
+        {
+            await _recordManager.AddOTAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), d, t);
+            return Json(new {d, t});
         }
 
         public class CheckingModel

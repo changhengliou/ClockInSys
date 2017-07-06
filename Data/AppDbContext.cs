@@ -4,12 +4,10 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using OfficeOpenXml.Drawing.Chart;
-using OfficeOpenXml.FormulaParsing;
+
 
 namespace ReactSpa.Data
 {
@@ -19,7 +17,7 @@ namespace ReactSpa.Data
         public DbSet<CheckRecord> CheckRecord { get; set; }
         public DbSet<UserDeputy> UserDeputy { get; set; }
         public DbSet<UserSupervisor> UserSupervisor { get; set; }
-
+        public DbSet<RemainingDayOff> RemainingDayOff { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -66,6 +64,12 @@ namespace ReactSpa.Data
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<UserInfo>()
+                .HasMany(s => s.RemainingDay)
+                .WithOne(s => s.User)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.Entity<CheckRecord>().Property(s => s.CheckInTime).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.CheckOutTime).IsRequired(false);
             builder.Entity<CheckRecord>().Property(s => s.OffReason).IsRequired(false);
@@ -89,6 +93,19 @@ namespace ReactSpa.Data
             builder.Entity<IdentityUserLogin<String>>().ToTable("UserLogin");
             builder.Entity<IdentityRoleClaim<String>>().ToTable("RoleClaim");
             builder.Entity<IdentityRole>().ToTable("Role").Property(s => s.Id).HasColumnName("RoleId");
+
+            builder.Entity<RemainingDayOff>()
+                .Property(s => s.AnnualLeaves)
+                .HasColumnType("decimal(5, 2)")
+                .HasDefaultValue("0");
+            builder.Entity<RemainingDayOff>()
+                .Property(s => s.SickLeaves)
+                .HasColumnType("decimal(5, 2)")
+                .HasDefaultValue("0");
+            builder.Entity<RemainingDayOff>()
+                .Property(s => s.FamilyCareLeaves)
+                .HasColumnType("decimal(5, 2)")
+                .HasDefaultValue("0");
         }
     }
 
@@ -115,6 +132,9 @@ namespace ReactSpa.Data
             set { _DateOfEmployment = value; }
         }
 
+        [Column(TypeName = "Date")]
+        public DateTime? DateOfQuit { get; set; }
+
         public string JobTitle { get; set; }
 
         public decimal AnnualLeaves { get; set; }
@@ -128,6 +148,8 @@ namespace ReactSpa.Data
         public virtual ICollection<UserDeputy> Deputy { get; set; }
 
         public virtual ICollection<UserSupervisor> Supervisor { get; set; }
+
+        public virtual ICollection<RemainingDayOff> RemainingDay { get; set; }
     }
 
 
@@ -208,7 +230,9 @@ namespace ReactSpa.Data
                     return StatusOfApprovalEnum.PENDING();
                 return _StatusOfApprovalForOvertime;
             }
-            set => _StatusOfApprovalForOvertime = value;
+            set  =>
+            _StatusOfApprovalForOvertime  =
+            value;
         }
 
         public virtual UserInfo UserInfo { get; set; }
@@ -293,6 +317,20 @@ namespace ReactSpa.Data
             FAMILY_CARE_LEAVE
         };
 
+        public static List<string> Leaves = new List<string>
+        {
+            PERSONAL_LEAVE,
+            SICK_LEAVE,
+            FUNERAL_LEAVE,
+            OFFICIAL_LEAVE,
+            MARRIAGE_LEAVE,
+            FAMILY_CARE_LEAVE,
+            MATERNITY_LEAVE,
+            COMPENSATORY_LEAVE,
+            ANNUAL_LEAVE,
+            "其他"
+        };
+
         public static string CHECK_IN => "打卡";
         public static string PERSONAL_LEAVE => "事假";
         public static string SICK_LEAVE => "病假";
@@ -361,5 +399,23 @@ namespace ReactSpa.Data
             }
             return user;
         }
+    }
+
+    public class RemainingDayOff
+    {
+        
+        public string Id { get; set; }
+
+        public string UserId { get; set; }
+
+        public string Year { get; set; }
+
+        public decimal AnnualLeaves { get; set; }
+
+        public decimal SickLeaves { get; set; }
+
+        public decimal FamilyCareLeaves { get; set; }
+
+        public virtual UserInfo User { get; set; }
     }
 }

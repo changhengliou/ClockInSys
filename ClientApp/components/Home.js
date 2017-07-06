@@ -190,13 +190,13 @@ class Home extends React.Component {
                         </div>
                         <div>
                             <button className='btn_date btn_info' style={{width: '40%', margin: '0 3.5% 0 2.5%'}}
-                                    onClick={ () => this.props.onCloseOTDialog() }>確定</button>
+                                    onClick={ () => this.props.onOTSubmit(this.props.OTDate, this.props.OTTime) }>確定</button>
                             <button className='btn_date btn_danger' style={{width: '40%', margin: '0 1.5% 0 8.5%'}}
                                     onClick={ () => this.props.onCloseOTDialog() }>取消</button>
                         </div>
                     </div>
                 </Dialog>
-                <Dialog title='打卡完成' 
+                <Dialog title='完成!' 
                         className='rc-dialog-dayoff-header'
                         visible={ this.props.showDialog } 
                         style={{ top: '40%', textAlign: 'center' }}
@@ -206,7 +206,7 @@ class Home extends React.Component {
                     <button className='btn_date btn_danger' style={{width: '30%'}}
                             onClick={ () => this.props.onCloseDialog() }>關閉</button>
                 </Dialog>
-                <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCgR4Fmw4SAbpzAwA6mivcy6viFm38OztE"></script>
+                <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB0iJIopuz1_WadpB1mBnGbCJ2wJN2AxCo"></script>
             </div>
         );
     }
@@ -250,6 +250,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         onOTTimeChange: (e) => {
             dispatch(actionCreators.onOTTimeChange(e));
+        },
+        onOTSubmit: (d, t) => {
+            dispatch(actionCreators.onOTSubmit(d, t));
         }
     };
 }

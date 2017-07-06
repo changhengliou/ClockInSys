@@ -7,87 +7,128 @@ import Dialog from 'rc-dialog';
 import 'rc-dialog/assets/index.css';
 import Tab from './Tab';
 
-const columns = [
-    {
-        Header: '姓名',
-        accessor: 'userName'
-    }, {
-        Header: '請假日期',
-        accessor: 'checkedDate'
-    }, {
-        Header: '請假類別',
-        accessor: 'offType'
-    }, {
-        Header: '請假時間',
-        accessor: 'offTime'
-    }, {
-        Header: '請假原因',
-        accessor: 'offReason'
-    }, {
-        Header: '狀態',
-        accessor: 'statusOfApproval',
-        minWidth: 160,
-        Cell: props => {
-            return props.value === '審核中'
-                ? (
-                    <div>
-                        <button
-                            style={{
-                            padding: '3px 5px'
-                        }}
-                            className='btn-2-group btn_date btn_default'
-                            name='approve'
-                            onClick={(e) => this.props.handleClick(props.index, e.target.name)}>同意</button>
-                        <button
-                            style={{
-                            padding: '3px 5px'
-                        }}
-                            className='btn-2-group btn_date btn_danger'
-                            name='negate'
-                            onClick={(e) => this.props.handleClick(props.index, e.target.name)}>不同意</button>
-                    </div>
-                )
-                : (
-                    <div>{props.value}</div>
-                );
-        }
-    }
-];
-const selfColumns = [
-    {
-        Header: '請假日期',
-        accessor: 'checkedDate'
-    }, {
-        Header: '請假類別',
-        accessor: 'offType'
-    }, {
-        Header: '請假時間',
-        accessor: 'offTime'
-    }, {
-        Header: '請假原因',
-        accessor: 'offReason'
-    }, {
-        Header: '狀態',
-        accessor: 'statusOfApproval'
-    }, {
-        Header: '取消',
-        minWidth: 120,
-        Cell: props => {
-            return (
-                <button
-                    style={{
-                    padding: '3px 5px'
-                }}
-                    className='btn_date btn_danger'
-                    name='delete'
-                    onClick={(e) => this.props.handleClick(props.index, e.target.name)}>取消請假</button>
-            );
-        }
-    }
-];
 class Notification extends Component {
     constructor(props) {
         super(props);
+        this.columns = [
+            {
+                Header: '姓名',
+                accessor: 'userName'
+            }, {
+                Header: '請假日期',
+                accessor: 'checkedDate'
+            }, {
+                Header: '請假類別',
+                accessor: 'offType'
+            }, {
+                Header: '請假時間',
+                accessor: 'offTime'
+            }, {
+                Header: '請假原因',
+                accessor: 'offReason'
+            }, {
+                Header: '狀態',
+                accessor: 'statusOfApproval',
+                minWidth: 160,
+                Cell: props => {
+                    return props.value === '審核中'
+                        ? (
+                            <div>
+                                <button
+                                    style={{
+                                    padding: '3px 5px'
+                                }}
+                                    className='btn-2-group btn_date btn_default'
+                                    name='approve'
+                                    onClick={(e) => this.props.handleClick(props.index, e.target.name)}>同意</button>
+                                <button
+                                    style={{
+                                    padding: '3px 5px'
+                                }}
+                                    className='btn-2-group btn_date btn_danger'
+                                    name='negate'
+                                    onClick={(e) => this.props.handleClick(props.index, e.target.name)}>不同意</button>
+                            </div>
+                        )
+                        : (
+                            <div>{props.value}</div>
+                        );
+                }
+            }
+        ];
+        this.selfColumns = [
+            {
+                Header: '日期',
+                accessor: 'checkedDate'
+            }, {
+                Header: '類別',
+                accessor: 'offType'
+            }, {
+                Header: '時間',
+                accessor: 'offTime'
+            }, {
+                Header: '原因',
+                accessor: 'offReason'
+            }, {
+                Header: '狀態',
+                accessor: 'statusOfApproval'
+            }, {
+                Header: '取消',
+                minWidth: 120,
+                Cell: props => {
+                    return (
+                        <button
+                            style={{
+                            padding: '3px 5px'
+                        }}
+                            className='btn_date btn_danger'
+                            name='delete'
+                            onClick={(e) => this.props.handleClick(props.index, e.target.name)}>取消申請</button>
+                    );
+                }
+            }
+        ];
+        this.otColumns = [
+            {
+                Header: '姓名',
+                accessor: 'userName'
+            }, {
+                Header: '加班日期',
+                accessor: 'checkedDate'
+            }, {
+                Header: '加班時間',
+                accessor: 'overtimeEndTime',
+                Cell: props => <span>{`19:00 - ${props.value}`}</span>
+            }, {
+                Header: '狀態',
+                accessor: 'statusOfApprovalForOvertime',
+                minWidth: 160,
+                Cell: props => {
+                    return props.value === '審核中'
+                        ? (
+                            <div>
+                                <button
+                                    style={{
+                                    padding: '3px 5px'
+                                }}
+                                    className='btn-2-group btn_date btn_default'
+                                    name='approve'
+                                    onClick={(e) => this.props.handleOTClick(props.index, e.target.name)}>同意</button>
+                                <button
+                                    style={{
+                                    padding: '3px 5px'
+                                }}
+                                    className='btn-2-group btn_date btn_danger'
+                                    name='negate'
+                                    onClick={(e) => this.props.handleOTClick(props.index, e.target.name)}>不同意</button>
+                            </div>
+                        )
+                        : (
+                            <div>{props.value}</div>
+                        );
+                }
+            }
+        ];
     }
     componentWillMount() {
         this.props.getInitState();
@@ -123,7 +164,7 @@ class Notification extends Component {
                 title: '請假審核',
                 component: <ReactTable
                         data={props.data}
-                        columns={columns}
+                        columns={this.columns}
                         loading={props.isLoading}
                         defaultPageSize={5}
                         showPageSizeOptions={false}
@@ -136,12 +177,24 @@ class Notification extends Component {
                         noDataText='無資料!'/>
             }, {
                 title: '加班審核',
-                component: <div>Not finished yet!</div>
+                component: <ReactTable
+                        data={props.otData}
+                        columns={this.otColumns}
+                        loading={props.OTLoading}
+                        defaultPageSize={5}
+                        showPageSizeOptions={false}
+                        previousText='上一頁'
+                        nextText='下一頁'
+                        loadingText='載入中...'
+                        pageText='第'
+                        ofText='之'
+                        rowsText='筆'
+                        noDataText='無資料!'/>
             }, {
                 title: '個人申請查詢',
                 component: <ReactTable
                         data={props.selfData}
-                        columns={selfColumns}
+                        columns={this.selfColumns}
                         loading={props.selfLoading}
                         defaultPageSize={5}
                         showPageSizeOptions={false}
@@ -161,7 +214,9 @@ class Notification extends Component {
                     title={'警告!'}
                     visible={props.showDialog}
                     onClose={() => {
-                    this.props.onDialogCancel()
+                    this
+                        .props
+                        .onDialogCancel()
                 }}
                     animation="zoom"
                     maskAnimation="fade"
@@ -199,6 +254,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         onRemoveRecord: (index) => {
             dispatch(actionCreators.onRemoveRecord(index));
+        },
+        handleOTClick: (index, name) => {
+            dispatch(actionCreators.handleOTClick(index, name));
         }
     }
 }

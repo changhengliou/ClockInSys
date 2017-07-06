@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using ReactSpa.Data;
@@ -85,7 +84,7 @@ namespace ReactSpa.Controllers
             List<OffRecordModel> resultModel =
                 await _recordManager.GetMonthOffRecordsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
                     model.CheckedDate.Year, model.CheckedDate.Month);
-            
+
             return Json(new
             {
                 payload = resultModel
@@ -94,13 +93,16 @@ namespace ReactSpa.Controllers
 
         //
         // cancel leave apply at '/dayOff', '/notification'
-        // GET: /api/record/cancelDayOff
+        // GET: /api/record/cancelRecord
         [HttpGet]
-        public async Task<ActionResult> CancelDayOff(string d)
+        public async Task<ActionResult> CancelRecord(string d, bool OT)
         {
             DateTime date;
             DateTime.TryParse(d, out date);
-            var result = await _recordManager.DeleteLeaveAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), date);
+            if (OT)
+                await _recordManager.DeleteOTAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), date);
+            else
+                await _recordManager.DeleteLeaveAsync(User.FindFirstValue(ClaimTypes.NameIdentifier), date);
             List<OffRecordModel> resultModel =
                 await _recordManager.GetMonthOffRecordsAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
                     date.Year, date.Month);
@@ -130,9 +132,22 @@ namespace ReactSpa.Controllers
         [HttpPost]
         public async Task<ActionResult> GetInitNotifiedState()
         {
-            var result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
-                showAll: false, showDeputy: true, showSupervisor: true);
-            return Json(new {payload = result});
+            List<NotificationModel> result = new List<NotificationModel>();
+            if (User.IsInRole("admin") || User.IsInRole("boss"))
+                result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    showAll: true, showDeputy: true, showSupervisor: true);
+            else
+                result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    showAll: false, showDeputy: true, showSupervisor: true);
+            var returnVal = FormatData(result);
+            return Json(new
+            {
+                payload = new
+                {
+                    data = returnVal.Item1,
+                    OTData = returnVal.Item2
+                }
+            });
         }
 
         //
@@ -142,7 +157,36 @@ namespace ReactSpa.Controllers
         public async Task<ActionResult> GetSelfNotifiedState()
         {
             var result = await _recordManager.GetNotificationByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            return Json(new {payload = result});
+            var returnVal = new List<Object>();
+            foreach (var i in result)
+            {
+                if (!string.IsNullOrWhiteSpace(i.OvertimeEndTime))
+                {
+                    returnVal.Add(new
+                    {
+                        checkedDate = i.CheckedDate,
+                        offType = "加班",
+                        offTime = $"19:00 - {i.OvertimeEndTime}",
+                        offReason = "",
+                        statusOfApproval = i.StatusOfApprovalForOvertime
+                    });
+                }
+                if (!string.IsNullOrWhiteSpace(i.OffType))
+                {
+                    returnVal.Add(new
+                    {
+                        checkedDate = i.CheckedDate,
+                        offType = i.OffType,
+                        offTime = i.OffTime,
+                        offReason = i.OffReason,
+                        statusOfApproval = i.StatusOfApproval
+                    });
+                }
+            }
+            return Json(new
+            {
+                payload = returnVal
+            });
         }
 
         //
@@ -151,12 +195,52 @@ namespace ReactSpa.Controllers
         [HttpPost]
         public async Task<ActionResult> SetNotification([FromBody] SetNotificationModel m)
         {
-            var result = await _recordManager.SetStatusOfApprovalAsync(m.RecordId, m.Status);
-            if (result)
+            if (await _recordManager.SetStatusOfApprovalAsync(m.RecordId, m.Status))
             {
-                List<NotificationModel> resultModel = await _recordManager.GetNotificationAsync(
-                    User.FindFirstValue(ClaimTypes.NameIdentifier));
-                return Json(new {payload = resultModel});
+                List<NotificationModel> result = new List<NotificationModel>();
+                if (User.IsInRole("admin") || User.IsInRole("boss"))
+                    result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        showAll: true, showDeputy: true, showSupervisor: true);
+                else
+                    result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        showAll: false, showDeputy: true, showSupervisor: true);
+                var returnVal = FormatData(result);
+                return Json(new
+                {
+                    payload = new
+                    {
+                        data = returnVal.Item1,
+                        OTData = returnVal.Item2
+                    }
+                });
+            }
+            return Json(new {payload = new List<NotificationModel>(), status = false});
+        }
+
+        //
+        // set Overtime status status at '/notification'
+        // POST: /api/record/setOTStatus
+        [HttpPost]
+        public async Task<ActionResult> SetOTStatus([FromBody] SetNotificationModel m)
+        {
+            if (await _recordManager.SetStatusOfApprovalAsync(m.RecordId, m.Status, OT: true))
+            {
+                List<NotificationModel> result = new List<NotificationModel>();
+                if (User.IsInRole("admin") || User.IsInRole("boss"))
+                    result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        showAll: true, showDeputy: true, showSupervisor: true);
+                else
+                    result = await _recordManager.GetNotificationAsync(User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        showAll: false, showDeputy: true, showSupervisor: true);
+                var returnVal = FormatData(result);
+                return Json(new
+                {
+                    payload = new
+                    {
+                        data = returnVal.Item1,
+                        OTData = returnVal.Item2
+                    }
+                });
             }
             return Json(new {payload = new List<NotificationModel>(), status = false});
         }
@@ -165,18 +249,24 @@ namespace ReactSpa.Controllers
         // query all records by time and id at '/report'
         // POST: /api/record/query
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "boss, manager, admin")]
         public async Task<ActionResult> Query([FromBody] QueryModel model)
         {
             var result = await QueryRecord(model);
-            UserInfoModel user = new UserInfoModel
+            var nullVal = new
             {
-                AnnualLeaves = 0,
-                SickLeaves = 0,
-                FamilyCareLeaves = 0
+                model = result,
+                a = 0,
+                s = 0,
+                f = 0
             };
-            if (model.Id != null)
-                user = await _userInfoManager.GetUserInfoAsync(model.Id);
+            if (string.IsNullOrWhiteSpace(model.Id))
+                return Json(new {payload = nullVal});
+
+            UserInfo user = await _userManager.FindByIdAsync(model.Id);
+            if (user == null)
+                return Json(new {payload = nullVal});
+
             return Json(new
             {
                 payload = new
@@ -190,10 +280,31 @@ namespace ReactSpa.Controllers
         }
 
         //
+        // query all records by time and id at '/report'
+        // POST: /api/record/query
+        [HttpGet]
+        [Authorize(Roles = "boss, manager, admin")]
+        public async Task<ActionResult> Query(string id)
+        {
+            UserInfo user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return Json(new {payload = new {a = 0, s = 0, f = 0}});
+            return Json(new
+            {
+                payload = new
+                {
+                    a = user.AnnualLeaves,
+                    s = user.SickLeaves,
+                    f = user.FamilyCareLeaves
+                }
+            });
+        }
+
+        //
         // insert or update record at '/report'
         // POST: /api/record/editRecord
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "boss, manager, admin")]
         public async Task<ActionResult> EditRecord([FromBody] EditRecordModel model)
         {
             if (!ModelState.IsValid)
@@ -214,7 +325,7 @@ namespace ReactSpa.Controllers
         // drop record at '/report'
         // POST: /api/record/deleteRecord
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "boss, manager, admin")]
         public async Task<ActionResult> DeleteRecord([FromBody] QueryModel model)
         {
             await _recordManager.DeleteRecordByRecordIdAsync(model.RecordId);
@@ -224,7 +335,7 @@ namespace ReactSpa.Controllers
 
         //
         // This is not an open API!
-        // function use by /api/record/deleteRecord and /api/record/editRecord
+        // function used by /api/record/deleteRecord and /api/record/editRecord
         public async Task<List<ReportModel>> QueryRecord(QueryModel model)
         {
             var options = RecordOptions.SelectAll;
@@ -232,6 +343,13 @@ namespace ReactSpa.Controllers
                 options = RecordOptions.SelectNormal;
             else if (model.Options == "2")
                 options = RecordOptions.SelectLeave;
+            else if (model.Options == "3")
+                options = RecordOptions.SelectOT;
+            else if (model.Options == "4")
+            {
+                IList<UserInfo> excludedList = await _userManager.GetUsersInRoleAsync("boss");
+                await _recordManager.AutomaticAddRecordAsync(model.FromDate, excludeFrom: excludedList);
+            }
             else if (model.Options != "0")
                 throw new Exception("Invalid Options");
             return await _recordManager.GetRecordsAsync(model.Id, model.FromDate, model.ToDate, options);
@@ -241,7 +359,7 @@ namespace ReactSpa.Controllers
         // export query result and export as excel XLSX file at '/report'
         // GET: /api/record/exportXlsx
         [HttpGet]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "boss, manager, admin")]
         public async Task<ActionResult> ExportXlsx(string a, string b, string c, string d)
         {
             try
@@ -265,36 +383,41 @@ namespace ReactSpa.Controllers
                         worksheet.Column(x).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     }
                     worksheet.Cells[1, 1].Value = $"{c} - {d} 出勤狀況表";
-                    worksheet.Cells[1, 1, 1, 10].Merge = true;
-                    worksheet.Cells[1, 1, 1, 10].Style.Font.Bold = true;
-                    worksheet.Cells[1, 1, 1, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    worksheet.Cells[2, 1].Value = "姓名";
-                    worksheet.Cells[2, 2].Value = "日期";
+                    worksheet.Cells[1, 1, 1, 11].Merge = true;
+                    worksheet.Cells[1, 1, 1, 11].Style.Font.Bold = true;
+                    worksheet.Cells[1, 1, 1, 11].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[2, 1].Value = "日期";
+                    worksheet.Cells[2, 2].Value = "姓名";
                     worksheet.Cells[2, 3].Value = "上班時間";
                     worksheet.Cells[2, 4].Value = "下班時間";
                     worksheet.Cells[2, 5].Value = "上班打卡座標";
                     worksheet.Cells[2, 6].Value = "下班打卡座標";
-                    worksheet.Cells[2, 7].Value = "請假申請日期";
-                    worksheet.Cells[2, 8].Value = "請假類別";
-                    worksheet.Cells[2, 9].Value = "請假時間";
-                    worksheet.Cells[2, 10].Value = "請假原因";
+                    worksheet.Cells[2, 7].Value = "加班時間";
+                    worksheet.Cells[2, 8].Value = "請假申請日期";
+                    worksheet.Cells[2, 9].Value = "請假類別";
+                    worksheet.Cells[2, 10].Value = "請假時間";
+                    worksheet.Cells[2, 11].Value = "請假原因";
 
                     for (int i = 0; i < result.Count; i++)
                     {
                         if (result[i].StatusOfApproval == StatusOfApprovalEnum.APPROVED())
                         {
-                            worksheet.Cells[$"G{i + 3}"].Value = result[i].OffApplyDate;
-                            worksheet.Cells[$"H{i + 3}"].Value = result[i].OffType;
-                            worksheet.Cells[$"I{i + 3}"].Value = $"{result[i].OffTimeStart} - {result[i].OffTimeEnd}";
-                            worksheet.Cells[$"J{i + 3}"].Value = result[i].OffReason;
-                        } else if(string.IsNullOrWhiteSpace(result[i].CheckInTime) && string.IsNullOrWhiteSpace(result[i].CheckOutTime))
+                            worksheet.Cells[$"H{i + 3}"].Value = result[i].OffApplyDate;
+                            worksheet.Cells[$"I{i + 3}"].Value = result[i].OffType;
+                            worksheet.Cells[$"J{i + 3}"].Value = $"{result[i].OffTimeStart} - {result[i].OffTimeEnd}";
+                            worksheet.Cells[$"K{i + 3}"].Value = result[i].OffReason;
+                        }
+                        else if (string.IsNullOrWhiteSpace(result[i].CheckInTime) &&
+                                 string.IsNullOrWhiteSpace(result[i].CheckOutTime))
                             continue;
-                        worksheet.Cells[$"A{i + 3}"].Value = result[i].UserName;
-                        worksheet.Cells[$"B{i + 3}"].Value = result[i].CheckedDate;
+                        worksheet.Cells[$"A{i + 3}"].Value = result[i].CheckedDate;
+                        worksheet.Cells[$"B{i + 3}"].Value = result[i].UserName;
                         worksheet.Cells[$"C{i + 3}"].Value = result[i].CheckInTime;
                         worksheet.Cells[$"D{i + 3}"].Value = result[i].CheckOutTime;
                         worksheet.Cells[$"E{i + 3}"].Value = result[i].GeoLocation1;
                         worksheet.Cells[$"F{i + 3}"].Value = result[i].GeoLocation2;
+                        if(result[i].StatusOfApprovalForOvertime == StatusOfApprovalEnum.APPROVED())
+                            worksheet.Cells[$"G{i + 3}"].Value = result[i].OvertimeEndTime;
                     }
 
                     byte[] file = pkg.GetAsByteArray();
@@ -319,6 +442,36 @@ namespace ReactSpa.Controllers
         {
             var result = await _recordManager.GetMonthlyOffRecordAsync(y, m);
             return Json(new {payload = result});
+        }
+
+        public Tuple<List<Object>, List<Object>> FormatData(List<NotificationModel> obj)
+        {
+            var data = new List<Object>();
+            var ot = new List<Object>();
+            foreach (var i in obj)
+            {
+                if (!string.IsNullOrWhiteSpace(i.OffType))
+                    data.Add(new
+                    {
+                        id = i.Id,
+                        userName = i.UserName,
+                        checkedDate = i.CheckedDate,
+                        offType = i.OffType,
+                        offTime = i.OffTime,
+                        offReason = i.OffReason,
+                        statusOfApproval = i.StatusOfApproval
+                    });
+                if (!string.IsNullOrWhiteSpace(i.OvertimeEndTime))
+                    ot.Add(new
+                    {
+                        id = i.Id,
+                        userName = i.UserName,
+                        checkedDate = i.CheckedDate,
+                        overtimeEndTime = i.OvertimeEndTime,
+                        statusOfApprovalForOvertime = i.StatusOfApprovalForOvertime
+                    });
+            }
+            return Tuple.Create(data, ot);
         }
     }
 
@@ -357,6 +510,7 @@ namespace ReactSpa.Controllers
 
         public string GeoLocation1 { get; set; }
         public string GeoLocation2 { get; set; }
+        public string OvertimeEndTime { get; set; }
         public string OffType { get; set; }
 
         [DataType((DataType.Time))]

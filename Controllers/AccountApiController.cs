@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -12,6 +13,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using ReactSpa.Data;
 
 namespace ReactSpa.Controllers
@@ -22,6 +25,7 @@ namespace ReactSpa.Controllers
     {
         private readonly UserManager<UserInfo> _userManager;
         private readonly UserInfoManager _userInfoManager;
+        private readonly RecordManager _recordManager;
 
         public AccountApiController(
             UserManager<UserInfo> userManager,
@@ -29,6 +33,7 @@ namespace ReactSpa.Controllers
         {
             _userManager = userManager;
             _userInfoManager = new UserInfoManager(config);
+            _recordManager = new RecordManager(config);
         }
 
         //
@@ -48,7 +53,7 @@ namespace ReactSpa.Controllers
         // get user data at '/manageaccount'
         // POST: /api/account/getUserInfo
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "manager, admin, boss")]
         public async Task<ActionResult> GetUserInfo([FromBody] DeleteUserModel model)
         {
             var user = await _userManager.FindByIdAsync(model.Id);
@@ -75,7 +80,8 @@ namespace ReactSpa.Controllers
                     h = user.FamilyCareLeaves,
                     i = deputies,
                     j = supervisors,
-                    k = role
+                    k = role,
+                    l = user.DateOfQuit
                 }
             });
         }
@@ -84,7 +90,7 @@ namespace ReactSpa.Controllers
         // search for name and id by typing key words at '/report', '/manageaccount'
         // POST: /api/account/getNameList
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "manager, admin, boss")]
         public async Task<ActionResult> GetNameList([FromBody] SearchNameListModel model)
         {
             var nameList = await _userInfoManager.SearchUserNameAsync(model.Param);
@@ -95,19 +101,24 @@ namespace ReactSpa.Controllers
         // create a new user at '/manageaccount'
         // POST: /api/account/CreateUser
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "manager, admin, boss")]
         public async Task<ActionResult> CreateUser([FromBody] UserModel model)
         {
             if (!ModelState.IsValid)
                 return Json(new {status = false, message = "Data is not valid!"});
-            DateTime dateOfEmployment;
+            DateTime dateOfEmployment, dateOfQuit;
             DateTime.TryParse(model.DateOfEmployment, out dateOfEmployment);
+            DateTime? quitVal = null;
+            if (DateTime.TryParse(model.DateOfQuit, out dateOfQuit))
+                quitVal = dateOfQuit;
+
             var user = new UserInfo
             {
                 UserName = model.UserName,
                 Email = model.UserEmail,
                 PhoneNumber = model.PhoneNumber,
                 DateOfEmployment = dateOfEmployment,
+                DateOfQuit = quitVal,
                 JobTitle = model.JobTitle,
                 AnnualLeaves = model.AnnualLeaves,
                 SickLeaves = model.SickLeaves,
@@ -134,7 +145,7 @@ namespace ReactSpa.Controllers
         // update an existed user data at '/manageaccount'
         // POST: /api/account/updateUser
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "manager, admin, boss")]
         public async Task<ActionResult> UpdateUser([FromBody] UserModel model)
         {
             if (!ModelState.IsValid)
@@ -155,7 +166,7 @@ namespace ReactSpa.Controllers
         // delete an existed user at '/manageaccount'
         // POST: /api/account/deleteUser
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "manager, admin, boss")]
         public async Task<ActionResult> DeleteUser([FromBody] DeleteUserModel model)
         {
             if (model.Id != User.FindFirstValue(ClaimTypes.NameIdentifier))
@@ -172,11 +183,97 @@ namespace ReactSpa.Controllers
         // check if email is unique and valid at '/manageaccount'
         // POST: /api/account/isEmailValid
         [HttpPost]
-        [Authorize(Roles = "manager, admin")]
+        [Authorize(Roles = "manager, admin, boss")]
         public async Task<ActionResult> IsEmailValid([FromBody] ValidModel model)
         {
             var result = await _userInfoManager.IsEmailValid(model.Id, model.Param);
             return Json(new {status = result});
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "manager, admin, boss")]
+        public async Task<ActionResult> GetRemainOffExcel()
+        {
+            var obj = await _recordManager.GetRemainingDayOffAsync();
+            using (ExcelPackage pkg = new ExcelPackage(new FileInfo($"{Guid.NewGuid()}.xlsx")))
+            {
+                ExcelWorksheet worksheet = pkg.Workbook.Worksheets.Add("報表1");
+                for (int x = 1; x < 10; x++)
+                {
+                    worksheet.Column(x).Width = 15;
+                    worksheet.Column(x).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                worksheet.Cells[1, 1].Value = "剩餘天數狀態表";
+                worksheet.Cells[1, 1, 1, 5].Merge = true;
+                worksheet.Cells[1, 1, 1, 5].Style.Font.Bold = true;
+                worksheet.Cells[1, 1, 1, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[2, 1].Value = "姓名";
+                worksheet.Cells[2, 2].Value = "年分";
+                worksheet.Cells[2, 3].Value = "特休剩餘天數";
+                worksheet.Cells[2, 4].Value = "病假剩餘天數";
+                worksheet.Cells[2, 5].Value = "家庭照顧假剩餘天數";
+
+                for (int i = 0; i < obj.Count; i++)
+                {
+                    worksheet.Cells[$"A{i + 3}"].Value = obj[i].UserName;
+                    worksheet.Cells[$"B{i + 3}"].Value = obj[i].Year;
+                    worksheet.Cells[$"C{i + 3}"].Value = obj[i].AnnualLeaves;
+                    worksheet.Cells[$"D{i + 3}"].Value = obj[i].SickLeaves;
+                    worksheet.Cells[$"E{i + 3}"].Value = obj[i].FamilyCareLeaves;
+                }
+
+                byte[] file = pkg.GetAsByteArray();
+                return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "manager, admin, boss")]
+        public async Task<ActionResult> GetStaffInfoExcel()
+        {
+            var obj = await _userInfoManager.GetUsersAsync();
+            using (ExcelPackage pkg = new ExcelPackage(new FileInfo($"{Guid.NewGuid()}.xlsx")))
+            {
+                ExcelWorksheet worksheet = pkg.Workbook.Worksheets.Add("報表1");
+                for (int x = 1; x < 10; x++)
+                {
+                    worksheet.Column(x).Width = 15;
+                    worksheet.Column(x).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                worksheet.Cells[1, 1].Value = "員工資料表";
+                worksheet.Cells[1, 1, 1, 9].Merge = true;
+                worksheet.Cells[1, 1, 1, 9].Style.Font.Bold = true;
+                worksheet.Cells[1, 1, 1, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[2, 1].Value = "姓名";
+                worksheet.Cells[2, 2].Value = "信箱";
+                worksheet.Cells[2, 3].Value = "電話";
+                worksheet.Cells[2, 4].Value = "入職日";
+                worksheet.Cells[2, 5].Value = "離職日";
+                worksheet.Cells[2, 6].Value = "職稱";
+                worksheet.Cells[2, 7].Value = "特休天數";
+                worksheet.Cells[2, 8].Value = "病假天數";
+                worksheet.Cells[2, 9].Value = "家庭照顧假天數";
+
+                for (int i = 0; i < obj.Count; i++)
+                {
+                    worksheet.Cells[$"A{i + 3}"].Value = obj[i].UserName;
+                    worksheet.Cells[$"B{i + 3}"].Value = obj[i].Email;
+                    worksheet.Cells[$"C{i + 3}"].Value = obj[i].PhoneNumber;
+                    worksheet.Cells[$"D{i + 3}"].Value = obj[i].DateOfEmployment == null
+                        ? null
+                        : obj[i].DateOfEmployment.Value.ToString("yyyy-MM-dd");
+                    worksheet.Cells[$"E{i + 3}"].Value = obj[i].DateOfQuit == null
+                        ? null
+                        : obj[i].DateOfQuit.Value.ToString("yyyy-MM-dd");
+                    worksheet.Cells[$"F{i + 3}"].Value = obj[i].JobTitle;
+                    worksheet.Cells[$"G{i + 3}"].Value = obj[i].AnnualLeaves;
+                    worksheet.Cells[$"H{i + 3}"].Value = obj[i].SickLeaves;
+                    worksheet.Cells[$"I{i + 3}"].Value = obj[i].FamilyCareLeaves;
+                }
+
+                byte[] file = pkg.GetAsByteArray();
+                return File(file, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
         }
 
         public class UserModel
@@ -189,6 +286,7 @@ namespace ReactSpa.Controllers
 
             public string PhoneNumber { get; set; }
             public string DateOfEmployment { get; set; }
+            public string DateOfQuit { get; set; }
             public string JobTitle { get; set; }
 
             [Range(0, 100)]

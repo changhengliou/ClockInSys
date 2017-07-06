@@ -18,22 +18,39 @@ class ManageForm extends Component {
     constructor(props){
         super(props);
         this.authOptions = [
+            {label: '老闆', value: 'boss'},
             {label: '系統管理員', value: 'admin'},
             {label: '主管', value: 'manager'}, 
-            {label: '一般帳戶', value: 'default'}
+            {label: '一般帳戶', value: 'default'},
+            {label: '已關閉帳戶', value: 'inactive'},
         ];
+        this.state = { isNameValid: true, isAuthValid: true };
     }
 
     render() { 
+        var idDisabled = this.props.data.isEmailValid && 
+                         this.props.data.UserName && 
+                         this.props.data.UserEmail &&
+                         this.props.data.Authority;
         if(this.props.data.isLoading) 
             return (<div style={{ fontSize: '24px' }}>載入中...</div>); else
         return (
             <div className='selectManage'>
+                <div style={{ textAlign: 'right', marginBottom: '10px' }}>
+                    <span style={{ color: 'red' }}>*</span>必填
+                </div>
                 <div className='form_div'>
-                    <label>姓名:</label>
+                    <label>姓名<span style={{ color: 'red' }}>*</span>:</label>
                     <input type="text" 
                            name='UserName'
                            className='form_input'
+                           onBlur={ (e) => { 
+                               if(this.props.data.UserName)
+                                   this.setState({ isNameValid: true });
+                               else
+                                   this.setState({ isNameValid: false });
+                           } }
+                           style={ this.state.isNameValid ? null : { borderColor: 'red' } }
                            value={ this.props.data.UserName }
                            onChange={ this.props.onTextChange } />
                 </div>
@@ -55,6 +72,16 @@ class ManageForm extends Component {
                         customInput={<DateInput/>} />
                 </div>
                 <div className='form_div'>
+                    <label>離職日:</label>
+                    <DatePicker dropdownMode="select"
+                        isClearable={ true }
+                        selected={ this.props.data.DateOfQuit ? new moment(this.props.data.DateOfQuit, 'YYYY-MM-DD') : null }
+                        onChange={ this.props.onQuitDateChange }
+                        style={{textAlign: "center"}}
+                        showYearDropdown showMonthDropdown 
+                        customInput={<DateInput/>} />
+                </div>
+                <div className='form_div'>
                     <label>職稱:</label>
                     <input type="text" 
                            name='JobTitle'
@@ -63,7 +90,7 @@ class ManageForm extends Component {
                            onChange={ this.props.onTextChange }/>
                 </div>
                 <div className='form_div'>
-                    <label>信箱:</label>
+                    <label>信箱<span style={{ color: 'red' }}>*</span>:</label>
                     <input type="email"
                            name='UserEmail'
                            className='form_input'
@@ -117,22 +144,29 @@ class ManageForm extends Component {
                                   loadOptions={ getOptions }></Select.Async>
                 </div>
                 <div className='form_div'>
-                    <label>權限設定:</label>
+                    <label>權限設定<span style={{ color: 'red' }}>*</span>:</label>
                     <Select className='form_input' 
                             searchable={false} 
                             clearable={false}
                             value={ this.props.data.Authority }
                             onChange={ this.props.onAuthChange }
-                            options={this.authOptions}></Select>
+                            options={this.authOptions}
+                            style={ this.state.isAuthValid ? null : { borderColor: 'red' } }
+                            onBlur={ ()=> {
+                                if(this.props.data.Authority)
+                                    this.setState({ isAuthValid: true });
+                                else
+                                    this.setState({ isAuthValid: false });
+                            } }></Select>
                 </div>
                 <div>
                     <button className='btn_date btn_info'
-                            style={
-                                this.props.data.isEmailValid ?
+                            style = {
+                                idDisabled ?
                                 _style.btn :
                                 { ..._style.btn, ...style.disabled }
                             }
-                            disabled={ !this.props.data.isEmailValid }
+                            disabled={ !idDisabled }
                             onClick={ () => { this.props.onUpdateClick(this.props.data) }}>
                         確認
                     </button>
@@ -185,6 +219,12 @@ const mapDispatchToProps = (dispatch) => {
                     dispatch(actionCreators.onValidEmail(props.choosedOpt.value));
                 else
                     dispatch(actionCreators.onValidEmail());
+        },
+        onQuitDateChange: (e) => {
+            var date = null;
+            if(e)
+                date = e.format('YYYY-MM-DD');
+            dispatch(actionCreators.onQuitDateChange(date));
         }
     };
 }

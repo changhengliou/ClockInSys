@@ -14,6 +14,7 @@ const initState = {
     UserEmail: '',
     PhoneNumber: '',
     DateOfEmployment: new moment().format('YYYY-MM-DD'),
+    DateOfQuit: null,
     JobTitle: '',
     AnnualLeaves: '0',
     SickLeaves: '30',
@@ -74,6 +75,7 @@ export const actionCreators = {
                     UserEmail: data.payload.b,
                     PhoneNumber: data.payload.c ? data.payload.c : '',
                     DateOfEmployment: new moment(data.payload.d, 'YYYY-MM-DD').format('YYYY-MM-DD'),
+                    DateOfQuit: data.payload.l ? new moment(data.payload.l, 'YYYY-MM-DD').format('YYYY-MM-DD') : null,
                     JobTitle: data.payload.e ? data.payload.e : '',
                     AnnualLeaves: data.payload.f,
                     SickLeaves: data.payload.g,
@@ -138,6 +140,7 @@ export const actionCreators = {
                 UserEmail: store.UserEmail,
                 PhoneNumber: store.PhoneNumber,
                 DateOfEmployment: store.DateOfEmployment,
+                DateOfQuit: store.DateOfQuit,
                 JobTitle: store.JobTitle,
                 AnnualLeaves: store.AnnualLeaves,
                 SickLeaves: store.SickLeaves,
@@ -175,6 +178,9 @@ export const actionCreators = {
     },
     onDateChange: (date) => (dispatch, getState) => {
         dispatch({ type: 'ON_DATE_CHANGE', payload: { DateOfEmployment: date, AnnualLeaves: getNumOfLeave(date) } });
+    },
+    onQuitDateChange: (date) => (dispatch, getState) => {
+        dispatch({ type: 'ON_QUIT_DATE_CHANGE', payload: { DateOfQuit: date, Authority: 'inactive' } });
     },
     onAuthChange: (value) => (dispatch, getState) => {
         dispatch({ type: 'ON_AUTH_CHANGE', payload: { Authority: value } });
@@ -228,6 +234,7 @@ export const reducer = (state = initState, action) => {
         case 'REQUEST_DELETE_ACCOUNT':
         case 'ON_TEXT_CHANGE':
         case 'ON_DATE_CHANGE':
+        case 'ON_QUIT_DATE_CHANGE':
         case 'ON_AUTH_CHANGE':
         case 'ON_DEPUTY_CHANGE':
         case 'ON_SUPERVISOR_CHANGE':

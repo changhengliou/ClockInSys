@@ -164,12 +164,16 @@ namespace ReactSpa.Data
                         $"DELETE FROM [dbo].[UserSupervisor] WHERE UserId='{model.Id}'");
                     await AddUserDeputyAsync(model.Id, model.Deputy);
                     await AddUserSupervisorAsync(model.Id, model.Supervisor);
-                    DateTime date;
+                    DateTime date, dateOfQuit;
                     DateTime.TryParse(model.DateOfEmployment, out date);
+                    DateTime? quitVal = null;
+                    if (DateTime.TryParse(model.DateOfQuit, out dateOfQuit))
+                        quitVal = dateOfQuit;
                     user.UserName = model.UserName;
                     user.Email = model.UserEmail;
                     user.PhoneNumber = model.PhoneNumber;
                     user.DateOfEmployment = date;
+                    user.DateOfQuit = quitVal;
                     user.JobTitle = model.JobTitle;
                     user.AnnualLeaves = model.AnnualLeaves;
                     user.SickLeaves = model.SickLeaves;
@@ -243,6 +247,14 @@ namespace ReactSpa.Data
                 }
             }
             return false;
+        }
+
+        public async Task<List<UserInfo>> GetUsersAsync()
+        {
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                return await dbContext.UserInfo.Select(s => s).ToListAsync();
+            }
         }
     }
 

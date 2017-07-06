@@ -1,0 +1,21 @@
+﻿@{
+    Layout = null;
+}
+@model ReactSpa.Data.UserInfo
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登入異常</title>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 30%;">
+        <h1>此帳號 @Model.UserName 已被關閉，若要重啟，請洽管理員😩</h1>
+        <h2>Your account @Model.UserName has been temporarily shutted down.</h2>
+        <h2>To reactivate, please inform administrator.</h2>
+    </div>
+    <script>
+    setTimeout(function() {location.href='/account/login'}, 3000);
+    </script>
+</body>
+</html>

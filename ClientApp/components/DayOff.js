@@ -10,9 +10,9 @@ import OffOption from './DayOff.Options';
 
 export class DateInput extends Component {
     render() {
-        var style = {};
+        var style = { height: '34px' };
         if(this.props.disabled)
-            style = {backgroundColor: '#ccc'};
+            style = { backgroundColor: '#ccc' };
         return (
             <button className='btn_date' onClick={this.props.onClick} style={style}>
                 {this.props.value}

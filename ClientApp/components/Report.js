@@ -10,7 +10,7 @@ class Report extends Component {
         // showCheckIn, showGeo, showOff, showStatus
         var props = this.props.data;
         var material;
-        switch(props.status){
+        switch(props.status) {
             case -1:
             default:
                 material = <div style={{fontSize: '20px', color: 'red'}}>Something is going down... =(</div>;
@@ -22,16 +22,29 @@ class Report extends Component {
                 material = <div style={{fontSize: '20px'}}>載入中...</div>;
                 break;
             case 2:
-                var showCheckIn = true, showGeo = true, showOff = true, showStatus = true;
+            // option 3 OT, option 4 automatic fill forms, not yet implemented
+                var showCheckIn = true, showGeo = true, showOff = true, showStatus = true, showOT = true;
                 if(props.options === '1') {
                     showOff = false;
                     showStatus = false;
                 }
-                if(props.options === '2') {
+                if (props.options === '2') {
                     showCheckIn = false;
                     showGeo = false;
+                    showOT = false;
+                }
+
+                if (props.options === '3') {
+                    showOff = false;
+                    showStatus = false;
+                }
+
+                if (props.options === '4') {
+                    material = <div style={{fontSize: '20px', color: 'red', fontWeight: '700'}}>動作完成!</div>;
+                    break;
                 }
                 material = <Table showCheckIn={ showCheckIn } 
+                                  showOT={ showOT }
                                   showOff={ showOff }
                                   showGeo={ showGeo }
                                   showStatus={ showStatus }

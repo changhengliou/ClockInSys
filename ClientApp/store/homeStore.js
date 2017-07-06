@@ -56,7 +56,7 @@ export const actionCreators = {
             })
         }).then(response => response.json()).then(data => {
             if (!data.status)
-                throw new error('Something goes wrong =(');
+                throw new Error('Something goes wrong =(');
             else
                 dispatch({ type: 'PROCEED_CHECKING', payload: { data: data.payload, showDialog: true } });
         }).catch(error => {
@@ -78,6 +78,23 @@ export const actionCreators = {
     },
     onOTTimeChange: (state) => (dispatch, getState) => {
         dispatch({ type: 'ON_HOME_PAGE_OT_TIME_CHANGE', payload: { OTTime: state } })
+    },
+    onOTSubmit: (date, time) => (dispatch, getState) => {
+        date = new moment(date, 'YYYY/MM/DD').format('YYYY/MM/DD')
+        let fetchTask = fetch(`api/home/OTsubmit?d=${date}&t=${time}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+        }).then(response => response.json()).then(data => {
+            console.log(data)
+            dispatch({ type: 'ON_HOME_PAGE_OT_SUBMIT', payload: { showDialog: true, showOTDialog: false } });
+        }).catch(error => {
+            dispatch({ type: 'ON_HOME_PAGE_OT_SUBMIT_FAILED', payload: error });
+        });
+        addTask(fetchTask);
     },
 };
 
@@ -103,6 +120,7 @@ export const reducer = (state = initState, action) => {
         case 'ON_HOME_PAGE_OT_DIALOG_CLOSE':
         case 'ON_HOME_PAGE_OT_DATE_CHANGE':
         case 'ON_HOME_PAGE_OT_TIME_CHANGE':
+        case 'ON_HOME_PAGE_OT_SUBMIT':
             return {...state, ...action.payload };
         default:
             return state;
