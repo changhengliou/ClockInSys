@@ -36,7 +36,7 @@ export const actionCreators = {
         addTask(fetchTask);
     },
     timeTicking: (time) => (dispatch, getState) => {
-        time = time.add(1, 'seconds').format("HH:mm:ss A");
+        time = time.add(1, 'seconds').format("hh:mm:ss A");
         dispatch({ type: 'TIME_TICKING', payload: { currentTime: time } });
     },
     proceedCheck: (_geo, type) => (dispatch, getState) => {

@@ -13,7 +13,7 @@ export default function configureStore(initialState) {
     //     predicate: (getState, action) => action.type !== 'TIME_TICKING'
     // });
     const createStoreWithMiddleware = compose(
-        applyMiddleware(thunk/*, logger*/),
+        applyMiddleware(thunk /*, logger*/ ),
         devToolsExtension ? devToolsExtension() : f => f
     )(createStore);
 

@@ -65,8 +65,10 @@ class DayOff extends Component {
             timeDiff = (props.toTime - props.fromTime) / 8,
             fromDate = new moment(props.fromDate, 'YYYY-MM-DD'),
             toDate = new moment(props.toDate, 'YYYY-MM-DD'),
-            disabledDate = props.disabledContent !== 'none' ? true : false,
+            disabledDate = props.disabledContent === 'none' || props.disabledContent === 'partial'
+             ? false : true,
             disableToDate = this.props.disableToDate;
+            
         if (timeDiff > 1)
             timeDiff = 1;
         if (props.fromDate !== props.toDate) {
@@ -105,6 +107,7 @@ class DayOff extends Component {
                                    disabledAll={ this.props.disableOffType }
                                    value={ props.offType }
                                    sickLeaves={ props.s }
+                                   sickLeavesOnly={ this.props.sickLeavesOnly }
                                    annualLeaves={ props.a }
                                    familyCareLeaves={ props.f }
                                    onChange={ (e) => this.props.onOffTypeChange(e.target.value) }/>

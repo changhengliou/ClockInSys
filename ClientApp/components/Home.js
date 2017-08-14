@@ -70,7 +70,7 @@ class Home extends React.Component {
             }
             this._intervalId = setInterval(() => {
                 if (this.props.data.currentTime) {
-                    var time = new moment(this.props.data.currentTime, "HH:mm:ss tt");
+                    var time = new moment(this.props.data.currentTime, "hh:mm:ss A");
                     this.intervalId = setInterval(() => {
                         this.props.timeTicking(time);
                     }, 1000);

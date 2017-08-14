@@ -96,8 +96,10 @@ export const actionCreators = {
                 offType: e.offType,
                 offReason: e.offReason
             }
-            if (option === 'fixable') {
+            if (option === 'partial') {
                 payload.disabledContent = 'partial';
+            } else if (option === 'fixable') {
+                payload.disabledContent = 'fixable';
             }
             dispatch({ type: 'ON_DIALOG_OPEN', payload: payload });
         }
@@ -138,7 +140,7 @@ export const actionCreators = {
     },
     onCancelLeaves: (date) => (dispatch, getState) => {
         dispatch({ type: 'PROCEED_APPLY_CANCEL', payload: { showDialog: false, isLoading: true } });
-        let fetchTask = fetch(`api/record/cancelDayOff?d=${date}`, {
+        let fetchTask = fetch(`api/record/removeRecord?d=${date}`, {
             method: 'GET',
             credentials: 'include',
             headers: {

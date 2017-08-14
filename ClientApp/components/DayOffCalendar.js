@@ -21,6 +21,10 @@ class DayOffCalendar extends Component {
         this.props.getInitState(date.getFullYear(), date.getMonth() + 1);
     }
 
+    /**
+     * this func is called when a slot is clicked
+     * @param {Object} info, pass event object for display 
+     */
     onSelectSlot(info) {
         var events = this.props.data.events;
         var date = new moment(info.start, 'YYYY-MM-DD').format('YYYY-MM-DD')
@@ -41,8 +45,9 @@ class DayOffCalendar extends Component {
                            disableToTime={ false } 
                            disableOffReason={ false }
                            disableConfirmBtn={ false }
+                           sickLeavesOnly={ false }
                            isBtnCancel={ false }/>);
-        if (props.disabledContent === 'partial') {
+        if (props.disabledContent === 'fixable') {
             off.props.disableToDate = true;
             off.props.disableOffType = false;
             off.props.disableFromTime = false;
@@ -50,6 +55,7 @@ class DayOffCalendar extends Component {
             off.props.disableOffReason = false;
             off.props.disableConfirmBtn = false;
             off.props.isBtnCancel= true;
+            off.props.sickLeavesOnly = false;
         } else if (props.disabledContent === 'all') {
             off.props.disableToDate = true;
             off.props.disableOffType = true;
@@ -58,6 +64,16 @@ class DayOffCalendar extends Component {
             off.props.disableOffReason = true;
             off.props.disableConfirmBtn = true;
             off.props.isBtnCancel = false;
+            off.props.sickLeavesOnly = false;
+        } else if (props.disabledContent === 'partial') {
+            off.props.disableToDate = true;
+            off.props.disableOffType = false;
+            off.props.disableFromTime = false;
+            off.props.disableToTime = false;
+            off.props.disableOffReason = false;
+            off.props.disableConfirmBtn = false;
+            off.props.isBtnCancel= false;
+            off.props.sickLeavesOnly = true;
         } else {
             off.props.disableToDate = false;
             off.props.disableOffType = false;
@@ -66,6 +82,7 @@ class DayOffCalendar extends Component {
             off.props.disableOffReason = false;
             off.props.disableConfirmBtn = false;
             off.props.isBtnCancel= false;
+            off.props.sickLeavesOnly = false;
         }
         return (
             <div style={{height: '500px', width: '92%', margin: '0 auto'}}>
@@ -125,15 +142,33 @@ const mapDispatchToProps = (dispatch) => {
         onDialogOpen: (e, isContent = false) => {
             var time = e.start ? new moment(e.start) : new moment(e.checkedDate, 'YYYY-MM-DD');
             time.set({hour: 9, minute: 0});
-            if(new moment().isAfter(time)){
+            if (new moment().format('YYYY-MM-DD') === time.format('YYYY-MM-DD')) {
                 if (isContent) {
                     dispatch(actionCreators.onDialogOpen(e, 'disabled')); // show past record, disabled all
                     return;
-                } else
+                } else {
+                    var obj = {
+                        checkedDate: time,
+                        offEndDate: time,
+                        offTimeStart: '13',
+                        offTimeEnd: '18', 
+                        offType: '病假', 
+                        offReason: null
+                    };
+                    dispatch(actionCreators.onDialogOpen(obj, 'partial')); // show today, only allow sickLeaves
+                    return;
+                }
+            }
+            if (new moment().isAfter(time)) {
+                if (isContent) {
+                    dispatch(actionCreators.onDialogOpen(e, 'disabled')); // show past record, disabled all
+                    return;
+                } else {
                     return; // disable past date
+                }
             } 
             if(isContent)
-                dispatch(actionCreators.onDialogOpen(e, 'fixable')); // show future record, fixable
+                dispatch(actionCreators.onDialogOpen(e, 'fixable')); // show future absent record
             else
                 dispatch(actionCreators.onDialogOpen(e.start)); // show future date  
         },
