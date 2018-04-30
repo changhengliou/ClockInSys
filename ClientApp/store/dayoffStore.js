@@ -10,7 +10,7 @@ const initState = {
     disabledContent: 'none',
     fromDate: null,
     toDate: null,
-    fromTime: '13',
+    fromTime: '18',
     toTime: '18',
     offType: '事假',
     offReason: '',

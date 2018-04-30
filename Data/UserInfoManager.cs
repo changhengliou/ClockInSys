@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using Microsoft.Extensions.Options;
 using ReactSpa.Controllers;
 using ReactSpa.Utils;
@@ -31,10 +33,44 @@ namespace ReactSpa.Data
                 var result = await dbContext.UserInfo.FirstOrDefaultAsync(s => s.Email == user.Email);
                 if (result != null)
                     return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateEmail(result.Email));
-
                 user.ConcurrencyStamp = Guid.NewGuid().ToString();
                 user.SecurityStamp = Guid.NewGuid().ToString();
-                dbContext.Entry(user).State = EntityState.Added;
+                using (var sql = dbContext.Database.GetDbConnection().CreateCommand())
+                {
+                    string doe = null;
+                    string doq = null;
+                    if (user.DateOfEmployment != null)
+                        doe = user.DateOfEmployment.Value.ToString("yyyy-MM-dd");
+                    if (user.DateOfQuit != null)
+                        doe = user.DateOfQuit.Value.ToString("yyyy-MM-dd");
+                    string cmd = null;
+                    sql.CommandText =
+                        $"INSERT INTO [User] ([Id], [AnnualLeaves], [ConcurrencyStamp], [Email], [FamilyCareLeaves], " +
+                        $"[JobTitle], [PhoneNumber], [SecurityStamp], [SickLeaves], [UserName], " +
+                        $"[DateOfEmployment], [DateOfQuit]) VALUES (\'{user.Id}\', {user.AnnualLeaves}, \'{user.ConcurrencyStamp}\', " +
+                        $"\'{user.Email}\', {user.FamilyCareLeaves}, \'{user.JobTitle}\', \'{user.PhoneNumber}\', " +
+                        $"\'{user.SecurityStamp}\', {user.SickLeaves}, \'{user.UserName}\', " +
+                        $"\'{doe}\', \'{doq}\')";
+                    dbContext.Database.OpenConnection();
+                    sql.ExecuteNonQuery();
+                }
+//                var newUser = new UserInfo
+//                {
+//                    Id = user.Id,
+//                    AnnualLeaves = user.AnnualLeaves,
+//                    ConcurrencyStamp = user.ConcurrencyStamp,
+//                    DateOfEmployment = user.DateOfEmployment,
+//                    DateOfQuit = user.DateOfQuit,
+//                    Email = user.Email,
+//                    FamilyCareLeaves = user.FamilyCareLeaves,
+//                    JobTitle = user.JobTitle,
+//                    PhoneNumber = user.PhoneNumber,
+//                    SecurityStamp = user.SecurityStamp,
+//                    SickLeaves = user.SickLeaves,
+//                    UserName = user.UserName
+//                };
+//                dbContext.UserInfo.Attach(newUser);
+//                dbContext.Entry(newUser).State = EntityState.Added;
                 await dbContext.SaveChangesAsync();
                 return IdentityResult.Success;
             }

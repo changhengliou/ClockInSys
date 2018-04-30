@@ -250,9 +250,9 @@ namespace ReactSpa.Controllers
                 worksheet.Cells[2, 4].Value = "入職日";
                 worksheet.Cells[2, 5].Value = "離職日";
                 worksheet.Cells[2, 6].Value = "職稱";
-                worksheet.Cells[2, 7].Value = "特休天數";
-                worksheet.Cells[2, 8].Value = "病假天數";
-                worksheet.Cells[2, 9].Value = "家庭照顧假天數";
+                worksheet.Cells[2, 7].Value = "剩餘特休天數";
+                worksheet.Cells[2, 8].Value = "剩餘病假天數";
+                worksheet.Cells[2, 9].Value = "剩餘家庭照顧假天數";
 
                 for (int i = 0; i < obj.Count; i++)
                 {

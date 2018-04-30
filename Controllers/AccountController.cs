@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,15 +17,15 @@ namespace ReactSpa.Controllers
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
-        private readonly UserManager<UserInfo> _userManager;
-        private readonly SignInManager<UserInfo> _signInManager;
+        private readonly UserManager _userManager;
+        private readonly SignInManager _signInManager;
         private readonly ILogger _logger;
         private readonly string _externalCookieScheme;
         private readonly UserInfoManager _userInfoManager;
 
         public AccountController(
-            UserManager<UserInfo> userManager,
-            SignInManager<UserInfo> signInManager,
+            UserManager userManager,
+            SignInManager signInManager,
             IOptions<IdentityCookieOptions> identityCookieOptions,
             ILoggerFactory loggerFactory,
             IOptions<ConnectionInfo> config)
@@ -80,20 +81,15 @@ namespace ReactSpa.Controllers
 
             // Sign in the user with this external login provider if the user already has a login.
             var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            
             if (user != null)
-            {
-                if (await _userManager.IsInRoleAsync(user, "inactive"))
-                {
-                    await _signInManager.SignOutAsync();
-                    return View("InActiveAccount", user);
-                } 
+            {                
+                
                 await _signInManager.SignInAsync(user, isPersistent: false, authenticationMethod: info.LoginProvider);
-                _logger.LogInformation(5, "User logged in with {Name} provider.", info.LoginProvider);
-                Debug.WriteLine($"auth = {User.Identity.IsAuthenticated}");
-                Debug.WriteLine($"id = {User.FindFirstValue(ClaimTypes.NameIdentifier)}");
-                Debug.WriteLine($"email = {User.FindFirstValue(ClaimTypes.Email)}");
-                Debug.WriteLine($"name = {User.FindFirstValue(ClaimTypes.Name)}");
-                return RedirectToAction("Index", "Home");
+
+                if (!User.IsInRole("inactive")) return RedirectToAction("Index", "Home");
+                await _signInManager.SignOutAsync();
+                return View("InActiveAccount");
             }
 
             // if no external login login, but email is already existed, create an external login
@@ -130,6 +126,12 @@ namespace ReactSpa.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return RedirectPermanent(nameof(Login));
         }
     }
 }

@@ -43,34 +43,38 @@ class DayOff extends Component {
 
     renderHourOptions(isToday = false) {
         var time = new Date();
-        var hours = time.getHours() + 1;
-        var hourOption = isToday ? [] : 
-                                   [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+        var hourOption = [9, 10, 11, 12, 13.5, 14, 15, 16, 17, 18];
         var options = [];
-        if (isToday) {
-            for(var i = hours; i <= 18; i++) {
-                hourOption.push(i);
-            } 
-        }
         hourOption.map((obj) => {
-            options.push(<option value={obj}>{obj}:00</option>);
+            if(obj == 13.5)
+                options.push(<option value={13.5}>{13}:30</option>);
+            else
+                options.push(<option value={obj}>{obj}:00</option>);
         });
         return options;
     }
     
     render() {
+        var props = this.props.data;
+        var hDiff = props.toTime - props.fromTime;
         var isToday = false,
             diffDate = false,
             props = this.props.data,
-            timeDiff = (props.toTime - props.fromTime) / 8,
+            timeDiff = 0.0,
             fromDate = new moment(props.fromDate, 'YYYY-MM-DD'),
             toDate = new moment(props.toDate, 'YYYY-MM-DD'),
             disabledDate = props.disabledContent === 'none' || props.disabledContent === 'partial'
              ? false : true,
             disableToDate = this.props.disableToDate;
-            
+        if (props.fromTime <= 12 && props.toTime >= 13.5) { // 11 12 13.5 14
+            hDiff -= 1.5;
+        }
+        timeDiff = hDiff / 7.5;
         if (timeDiff > 1)
             timeDiff = 1;
+        else if (timeDiff <= 0)
+            timeDiff = 0;
+        timeDiff = Math.round(timeDiff * 1000) / 1000;
         if (props.fromDate !== props.toDate) {
             diffDate = true;
         } else {

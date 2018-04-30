@@ -206,7 +206,7 @@ class Home extends React.Component {
                     <button className='btn_date btn_danger' style={{width: '30%'}}
                             onClick={ () => this.props.onCloseDialog() }>關閉</button>
                 </Dialog>
-                <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB0iJIopuz1_WadpB1mBnGbCJ2wJN2AxCo"></script>
+                <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_RXE425nrZZbrGrciAXqIybJ6-S8dPxA"></script>
             </div>
         );
     }

@@ -62,7 +62,7 @@ class NavMenu extends React.Component {
                 <nav className="mps_top_nav">
                     <div className="top_hamburger" onClick={this.openNav}></div>
                     <Link to="/">
-                        <div className="system_name">穎哲資訊出勤管理系統</div>
+                        <div className="system_name">出勤管理系統</div>
                     </Link>
                     <div className="nav_top_right">
                         {

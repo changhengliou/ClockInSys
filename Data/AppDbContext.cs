@@ -355,10 +355,15 @@ namespace ReactSpa.Data
             if (calc <= 0)
                 throw new Exception("Invalid Time, beginning is later than ending time");
             var result = new TimeSpan(calc).TotalHours;
-            if (result > 8)
+            Console.WriteLine($"------{start.Value}, {after.Value}, {result}--------");
+            if (start.Value.Hours <= 12 && after.Value.Hours >= 13)
+                result -= 1.5;
+            if (result > 7.5)
                 result = 1;
+            else if (result <= 0)
+                result = 0;
             else
-                result /= 8;
+                result /= 7.5;
 
             double days;
             switch (type)

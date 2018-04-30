@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.Annotations;
@@ -43,23 +44,25 @@ namespace ReactSpa
             services.AddDbContext<AppDbContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("LocalSQLServer")));
 
-            services.AddCustomIdentity<UserInfo, IdentityRole>().AddEfStores<UserInfo, IdentityRole, AppDbContext>();
+            services.AddIdentity<UserInfo, IdentityRole>()
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddUserManager<UserManager>()
+                .AddSignInManager<SignInManager>()
+                .AddDefaultTokenProviders();
 
-//            services.AddIdentity<UserInfo, IdentityRole>()
-//                .AddEntityFrameworkStores<AppDbContext>()
-//                .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
             {
                 options.User.RequireUniqueEmail = true;
                 options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromHours(1);
                 options.Cookies.ApplicationCookie.LoginPath = "/account/login";
+                options.Cookies.ApplicationCookie.ReturnUrlParameter = "/account/login";
                 options.Cookies.ApplicationCookie.LogoutPath = "/account/logout";
             });
 
             services.AddHangfire(config =>
                 config.UseSqlServerStorage(Configuration.GetConnectionString("LocalSQLServer")));
-            // Add framework services.
+
             services.AddMvc(options =>
             {
                 options.SslPort = 44305;
@@ -99,7 +102,7 @@ namespace ReactSpa
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                AuthenticationScheme = "External",
+                AuthenticationScheme = "changheng",
                 CookieHttpOnly = true
             });
 
@@ -113,7 +116,7 @@ namespace ReactSpa
 
             // schedule task
             app.UseHangfireServer();
-            RecurringJob.AddOrUpdate(() => RegisterScheduleTask(), Cron.Daily);
+            RecurringJob.AddOrUpdate(() => RegisterScheduleTask2(), Cron.Daily);
             app.UseHangfireDashboard("/hangfire", new DashboardOptions
             {
                 Authorization = new[] {new CustomAuthorizeFilter()}
@@ -132,6 +135,10 @@ namespace ReactSpa
             InitDatabaseHelper.SeedRoles(app.ApplicationServices).Wait();
         }
 
+        /// <summary>
+        /// Hangfire scheduled task, this will refill annualLeaves annually on the date of employment.
+        /// This will also refill sickLeaves and familyCareLeaves annually. 
+        /// </summary>
         public void RegisterScheduleTask()
         {
             DbContextOptionsBuilder<AppDbContext> builder = new DbContextOptionsBuilder<AppDbContext>();
@@ -204,6 +211,36 @@ namespace ReactSpa
             }
         }
 
+        /// <summary>
+        /// Hangfire scheduled task, this will refill annualLeaves, sickLeaves and familyCareLeaves 
+        /// annually on the beginging of each year.
+        /// </summary>
+        public void RegisterScheduleTask2()
+        {
+            DbContextOptionsBuilder<AppDbContext> builder = new DbContextOptionsBuilder<AppDbContext>();
+            builder.UseSqlServer(Configuration.GetConnectionString("LocalSQLServer"));
+            using (var dbContext = new AppDbContext(builder.Options))
+            {
+                dbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+                var today = DateTime.Today;
+                if (today.Day == 1 && today.Month == 1)
+                {
+                    var users = dbContext.UserInfo.Select(s => s);
+                    foreach (var user in users)
+                    {
+                        user.AnnualLeaves = GetNumberOfAnnualLeaves(user.DateOfEmployment);
+                        user.SickLeaves = 30;
+                        user.FamilyCareLeaves = 7;
+                        dbContext.Entry(user).State = EntityState.Modified;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Given the dateOfEmployment, this will return how many annualLeaves does someone have.
+        /// </summary>
+        /// <param name="_date">Date of Employment</param>
         public int GetNumberOfAnnualLeaves(DateTime? _date)
         {
             if (_date == null)
@@ -232,6 +269,12 @@ namespace ReactSpa
         }
     }
 
+    /// <summary>
+    /// Migration initalizer. This is used base on Microsoft Entity Framework Code First Migration.
+    /// Given the command <value>dotnet ef migrations add init </value> in command line, this will add an initial migration.
+    /// while starting this program at the first time, 
+    /// this function will add 5 roles to the database and execute all the sql command automatically.
+    /// </summary>
     public static class InitDatabaseHelper
     {
         private static readonly string[] Roles = {"boss", "admin", "manager", "default", "inactive"};

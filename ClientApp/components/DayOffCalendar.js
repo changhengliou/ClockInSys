@@ -150,7 +150,7 @@ const mapDispatchToProps = (dispatch) => {
                     var obj = {
                         checkedDate: time,
                         offEndDate: time,
-                        offTimeStart: '13',
+                        offTimeStart: '18',
                         offTimeEnd: '18', 
                         offType: '病假', 
                         offReason: null
