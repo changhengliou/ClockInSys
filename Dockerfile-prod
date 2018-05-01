@@ -1,0 +1,15 @@
+FROM microsoft/dotnet:1.1.8-runtime
+
+ENV INSTALL_PATH=/usr/local/app EXECUTEABLE=ReactSpa.dll
+
+WORKDIR ${INSTALL_PATH}
+
+RUN curl -sL https://deb.nodesource.com/setup_8.x | /bin/bash - && \
+    apt-get install -y nodejs && \
+    adduser --disabled-password app
+
+COPY app ${INSTALL_PATH}/
+
+CMD [ "dotnet", "ReactSpa.dll" ]
+
+USER app

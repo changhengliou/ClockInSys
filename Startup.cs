@@ -108,8 +108,8 @@ namespace ReactSpa
 
             app.UseGoogleAuthentication(new GoogleOptions
             {
-                ClientId = "801390402609-u1p4juuc8432gaqd0gr80o2i1v5fcbsh.apps.googleusercontent.com",
-                ClientSecret = "-m9m9iP2q0SfDi1AtL_Zx7ku",
+                ClientId = "647627797208-0d5io4dpdd268fst3e215a6k60c8srj8.apps.googleusercontent.com",
+                ClientSecret = "5zf19FN2r73wd5fwvhgSAWst",
                 AuthenticationScheme = "Google",
                 CallbackPath = "/account/callback-google"
             });
